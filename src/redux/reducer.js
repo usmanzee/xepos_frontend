@@ -544,6 +544,92 @@ const customersByMobileReducer = (
   }
 };
 
+const staffHolidaysReducer = (state = initialState.staffHolidays, action) => {
+  switch (action.type) {
+    case types.STAFF_HOLIDAYS_BY_MONTH_SERVICE_CENTER_FETCH:
+      return {
+        ...state,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: true,
+        },
+      };
+    case types.STAFF_HOLIDAYS_BY_MONTH_SERVICE_CENTER_DATA:
+      return {
+        ...state,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: false,
+          list: action.payload,
+        },
+      };
+    case types.STAFF_HOLIDAYS_BY_MONTH_SERVICE_CENTER_ERROR:
+      return {
+        ...state,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: false,
+        },
+      };
+    case types.STAFF_HOLIDAYS_CREATE_DELETE_FETCH:
+      return {
+        ...state,
+        addDeleteLoading: true,
+        addDeleteSuccess: false,
+      };
+    case types.STAFF_HOLIDAYS_CREATE_DELETE_SUCCESS:
+      const isDelete = action.payload.isDelete;
+
+      return {
+        ...state,
+        addDeleteLoading: false,
+        addDeleteSuccess: true,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          list: !isDelete
+            ? [...state.byMonthAndServiceCenter.list, action.payload]
+            : state.byMonthAndServiceCenter.list.filter(
+                (item) => item.id !== action.payload.id
+              ),
+        },
+      };
+    case types.STAFF_HOLIDAYS_CREATE_DELETE_ERROR:
+      return {
+        ...state,
+        addDeleteLoading: false,
+        addDeleteSuccess: false,
+      };
+    default:
+      return state;
+  }
+};
+
+const vehicleOperationsReducer = (
+  state = initialState.vehicleOperations,
+  action
+) => {
+  switch (action.type) {
+    case types.VEHICLE_OPERATIONS_FETCH:
+      return {
+        ...state,
+        loading: true,
+      };
+    case types.VEHICLE_OPERATIONS_DATA:
+      return {
+        ...state,
+        loading: false,
+        list: action.payload,
+      };
+    case types.VEHICLE_OPERATIONS_ERROR:
+      return {
+        ...state,
+        loading: false,
+      };
+    default:
+      return state;
+  }
+};
+
 const rootReducer = combineReducers({
   auth: authReducer,
   login: loginReducer,
@@ -561,6 +647,8 @@ const rootReducer = combineReducers({
   screenLoader: screenLoaderReducer,
   serviceAdvisors: serviceAdvisorsReducer,
   customersByMobile: customersByMobileReducer,
+  staffHolidays: staffHolidaysReducer,
+  vehicleOperations: vehicleOperationsReducer,
 });
 
 export default rootReducer;

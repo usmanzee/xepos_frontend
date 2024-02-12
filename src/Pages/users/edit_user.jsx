@@ -31,7 +31,7 @@ const EditUser = () => {
   const params = useParams();
   const [form] = Form.useForm();
 
-  const [selectedCompanyIds, setSelectedCompanyIds] = useState([]);
+  const [selectedCodes, setSelectedCodes] = useState([]);
 
   const usersLoading = useSelector((state) => state.users.loading);
   const users = useSelector((state) => state.users.list);
@@ -68,7 +68,7 @@ const EditUser = () => {
           return serviceCenter.code;
         }
       );
-      setSelectedCompanyIds(selectedCentersCodesData);
+      setSelectedCodes(selectedCentersCodesData);
       userDetail["role_id"] = userDetail.roleId;
       userDetail["servicecenter_codes"] = selectedCentersCodesData;
       form.setFieldsValue(userDetail);
@@ -87,14 +87,14 @@ const EditUser = () => {
 
     if (values.servicecenter_codes.length) {
       values.servicecenter_codes.forEach((companyId) => {
-        if (!selectedCompanyIds.includes(companyId)) {
+        if (!selectedCodes.includes(companyId)) {
           centerCodesToAdd.push(companyId);
         }
       });
     }
 
     if (values.servicecenter_codes.length) {
-      selectedCompanyIds.forEach((selectedCompanyId) => {
+      selectedCodes.forEach((selectedCompanyId) => {
         if (!values.servicecenter_codes.includes(selectedCompanyId)) {
           centerCodesToDelete.push(selectedCompanyId);
         }
@@ -239,7 +239,7 @@ const EditUser = () => {
                                   key={`key-${serviceCenter.code}`}
                                   value={serviceCenter.code}
                                   // disabled={
-                                  //   selectedCompanyIds.includes(company.id)
+                                  //   selectedCodes.includes(company.id)
                                   //     ? true
                                   //     : false
                                   // }

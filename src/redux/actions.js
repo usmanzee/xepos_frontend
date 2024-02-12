@@ -19,6 +19,7 @@ export * from "./AuthActions.js";
 export * from "./UserActions.js";
 export * from "./BookingTransactionActions";
 export * from "./CustomerActions";
+export * from "./StaffHolidayActions";
 
 export const handleError = (error, navigate, dispatch) => {
   if (error.code === 401) {
@@ -312,3 +313,26 @@ export const getServiceAdvisors =
       });
     }
   };
+
+export const getVehicleOprationsAction = (navigate) => async (dispatch) => {
+  try {
+    dispatch({
+      type: types.VEHICLE_OPERATIONS_FETCH,
+    });
+    const config = {
+      apiVersion: "baseUrl",
+      headers: { Authorization: "Bearer " + getToken() },
+    };
+    const response = await API.get(config)("/api/vehicleoperation/all");
+    const data = response.data;
+    dispatch({
+      type: types.VEHICLE_OPERATIONS_DATA,
+      payload: data,
+    });
+  } catch (error) {
+    handleError(error, navigate, dispatch);
+    dispatch({
+      type: types.VEHICLE_OPERATIONS_ERROR,
+    });
+  }
+};

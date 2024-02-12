@@ -97,6 +97,20 @@ const customersByMobileState = {
   list: [],
 };
 
+const staffHolidaysState = {
+  byMonthAndServiceCenter: {
+    loading: false,
+    list: [],
+  },
+  addDeleteLoading: false,
+  addDeleteSuccess: false,
+};
+
+const vehicleOperationsState = {
+  loading: false,
+  list: [],
+};
+
 const initialState = {
   auth: authState,
   screenLoader: screenLoaderState,
@@ -114,6 +128,8 @@ const initialState = {
   bookingTransactions: bookingTransactionsState,
   serviceAdvisors: serviceAdvisorsState,
   customersByMobile: customersByMobileState,
+  staffHolidays: staffHolidaysState,
+  vehicleOperations: vehicleOperationsState,
 };
 
 export { initialState };

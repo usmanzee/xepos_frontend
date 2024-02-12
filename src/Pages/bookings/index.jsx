@@ -39,6 +39,7 @@ import {
   getVehicleModelsFetch,
   getAvailableSlotsFetch,
   getBookingStatusesFetch,
+  getVehicleOprationsAction,
 } from "../../redux/actions";
 import { useNavigate } from "react-router-dom";
 
@@ -89,6 +90,8 @@ const BookAppointment = () => {
 
   const { loading: serviceAdvisorsLoading, list: serviceAdvisors } =
     useSelector((state) => state.serviceAdvisors);
+  const { loading: vehicleOperationsLoading, list: vehicleOperations } =
+    useSelector((state) => state.vehicleOperations);
 
   const [selectedYear, setSelectedYear] = React.useState(moment().year());
   const [selectedMonth, setSelectedMonth] = React.useState(
@@ -107,6 +110,9 @@ const BookAppointment = () => {
     React.useState([]);
   const [selectedAppointmentToUpdate, setSelectedAppointmentToUpdate] =
     React.useState(null);
+  const [selectedAppointmentOperationIds, setSelectedAppointmentOperationIds] =
+    React.useState([]);
+
   const [monthDatesColumns, setMonthDatesColumns] = React.useState([
     {
       title: "Slot",
@@ -128,6 +134,8 @@ const BookAppointment = () => {
     vehicleModel: "",
     vehicleModelYear: "",
     KmReading: "",
+    vehicleOperationIds: [],
+    statusId: 1,
   });
 
   const [isEditing, setisEditing] = React.useState(false);
@@ -136,6 +144,7 @@ const BookAppointment = () => {
     dispatch(getSlotsFetch(navigate));
     dispatch(getBookingStatusesFetch(navigate));
     dispatch(getVehicleModelsFetch(navigate));
+    dispatch(getVehicleOprationsAction(navigate));
   }, []);
 
   React.useEffect(() => {
@@ -261,7 +270,6 @@ const BookAppointment = () => {
   React.useEffect(() => {
     if (selectedAppointmentToUpdate) {
       setisEditing(true);
-      console.log(selectedAppointmentToUpdate);
       const slotCode = selectedAppointmentToUpdate.slotCode;
       const timeSlot = timeSlots.find((item) => item.code === slotCode);
       setSelectedDate(selectedAppointmentToUpdate.bookingDate);
@@ -277,7 +285,16 @@ const BookAppointment = () => {
         vehicleModel: Number(selectedAppointmentToUpdate.vehicleModelCode),
         vehicleModelYear: Number(selectedAppointmentToUpdate.vehicleModelYear),
         KmReading: selectedAppointmentToUpdate.kmReading,
+        statusId: selectedAppointmentToUpdate.statusId,
       };
+      const selectedOperationIds =
+        selectedAppointmentToUpdate.vehicleOperations.map(
+          (vehicleOperation) => {
+            return vehicleOperation.operationId;
+          }
+        );
+      setSelectedAppointmentOperationIds(selectedOperationIds);
+      updateFormValues["vehicleOperationIds"] = selectedOperationIds;
       customerForm.setFieldsValue(updateFormValues);
 
       showAppointmentBookingModal();
@@ -597,6 +614,12 @@ const BookAppointment = () => {
         setFormValues={setCustomerFormValues}
         isEditing={isEditing}
         selectedAppointment={selectedAppointmentToUpdate}
+        bookingStatusesLoading={bookingStatusesLoading}
+        bookingStatuses={bookingStatuses}
+        vehicleOperationsLoading={vehicleOperationsLoading}
+        vehicleOperations={vehicleOperations}
+        selectedAppointmentOperationIds={selectedAppointmentOperationIds}
+        setSelectedAppointmentOperationIds={setSelectedAppointmentOperationIds}
       />
       <AppointmentsModal
         open={appointmentsModalOpen}

@@ -21,6 +21,7 @@ import {
   Descriptions,
   Skeleton,
   AutoComplete,
+  Tag,
 } from "antd";
 import moment from "moment/moment";
 import {
@@ -98,6 +99,12 @@ export const AppointmentBookingModal = (props) => {
     setFormValues,
     isEditing,
     selectedAppointment,
+    bookingStatusesLoading,
+    bookingStatuses,
+    vehicleOperationsLoading,
+    vehicleOperations,
+    selectedAppointmentOperationIds,
+    setSelectedAppointmentOperationIds,
   } = props;
 
   const { loading: customersLoading, list: customers } = useSelector(
@@ -105,8 +112,16 @@ export const AppointmentBookingModal = (props) => {
   );
 
   const [selectedVehicleModel, setSelectedVehicleModel] = React.useState(null);
+  const [selectedBookingStatus, setSelectedBookingStatus] =
+    React.useState(null);
   const [customerOptions, setCustomerOptions] = React.useState([]);
   const [selectedCustomer, setSelectedCustomer] = React.useState(null);
+
+  React.useEffect(() => {
+    if (bookingStatuses.length) {
+      setSelectedBookingStatus(bookingStatuses[0]);
+    }
+  }, [bookingStatuses]);
 
   React.useEffect(() => {
     const options = customers.map((customer) => {
@@ -133,6 +148,7 @@ export const AppointmentBookingModal = (props) => {
       const validated = await isCustomFormValidated();
       if (validated) {
         const values = form.getFieldsValue();
+        console.log(values);
         setFormValues((prevState) => ({
           ...prevState,
           ...values,
@@ -165,6 +181,28 @@ export const AppointmentBookingModal = (props) => {
     } else {
       requestData["isEditing"] = true;
       requestData["id"] = selectedAppointment.id;
+
+      let operationsIdsToAdd = [];
+      let operationsIdsToDelete = [];
+
+      if (formValues.vehicleOperationIds.length) {
+        formValues.vehicleOperationIds.forEach((id) => {
+          if (!selectedAppointmentOperationIds.includes(id)) {
+            operationsIdsToAdd.push(id);
+          }
+        });
+      }
+
+      if (formValues.vehicleOperationIds.length) {
+        selectedAppointmentOperationIds.forEach((id) => {
+          if (!formValues.vehicleOperationIds.includes(id)) {
+            operationsIdsToDelete.push(id);
+          }
+        });
+      }
+      requestData["vehicleOperationIds"] = operationsIdsToAdd;
+      requestData["deleteVehicleOperationIds"] = operationsIdsToDelete;
+
       await dispatch(updateBooking(navigate, requestData));
     }
     console.log(requestData);
@@ -417,7 +455,7 @@ export const AppointmentBookingModal = (props) => {
     return (
       <>
         <Row style={{ marginTop: "16px" }} justify="center">
-          <Col span={10}>
+          <Col span={12} offset={6}>
             <Descriptions>
               {/* <Descriptions.Item label="Service Center">
                 Service center 1
@@ -431,16 +469,21 @@ export const AppointmentBookingModal = (props) => {
             </Descriptions>
           </Col>
         </Row>
-        <Row justify="center">
-          <Col span={10}>
-            <Form
-              // onFinish={onFinish}
-              // onFinishFailed={onFinishFailed}
-              form={form}
-              layout="vertical"
-              className="row-col"
-              autoComplete="off"
-            >
+        <Form
+          form={form}
+          layout="vertical"
+          className="row-col"
+          autoComplete="off"
+          initialValues={{
+            ...(!isEditing &&
+              bookingStatuses.length && {
+                statusId: bookingStatuses[0].id,
+              }),
+          }}
+        >
+          <Row gutter={24}>
+            <Col span={12}>
+              <Divider>Customer Details</Divider>
               <Row>
                 <Col span={24}>
                   <Form.Item
@@ -491,16 +534,20 @@ export const AppointmentBookingModal = (props) => {
                         required: true,
                         message: "Please input Customer Mobile!",
                       },
+                      // {
+                      //   len: 9,
+                      //   message: "Please enter a valid 9 digits Mobile number",
+                      // },
                       {
-                        len: 9,
-                        message: "Please enter a valid 9 digits Mobile number",
+                        pattern: /^(?:2|3|4|6|7|9|50|51|52|55|56)[0-9]{7}$/,
+                        message: "Please enter a valid Mobile number",
                       },
                     ]}
                   >
                     <Input
                       addonBefore="+971"
                       type="number"
-                      placeholder="Customer Mobile(9 Digits)"
+                      placeholder="Customer Mobile(9 Digits) e.g; 503817063"
                       count={{
                         show: true,
                         len: 9,
@@ -522,8 +569,8 @@ export const AppointmentBookingModal = (props) => {
                   </Form.Item>
                 </Col>
               </Row>
-              <Row gutter={5}>
-                <Col span={12}>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Customer Name"
                     name="customerName"
@@ -553,7 +600,9 @@ export const AppointmentBookingModal = (props) => {
                     />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+              </Row>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Customer Email"
                     name="customerEmail"
@@ -570,9 +619,11 @@ export const AppointmentBookingModal = (props) => {
                   </Form.Item>
                 </Col>
               </Row>
-
-              <Row gutter={5}>
-                <Col span={12}>
+            </Col>
+            <Col span={12}>
+              <Divider>Vehicle Details</Divider>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Vehicle Registeration Number"
                     name="vehicleRegNo"
@@ -587,7 +638,9 @@ export const AppointmentBookingModal = (props) => {
                     <Input placeholder="Vehicle Registeration Number" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+              </Row>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Vehicle Model"
                     name="vehicleModel"
@@ -600,15 +653,6 @@ export const AppointmentBookingModal = (props) => {
                   >
                     <Select
                       placeholder="Vehicle Model"
-                      // showSearch
-                      // optionFilterProp="children"
-                      // filterOption={(input, option) => {
-                      //   return (
-                      //     option.children
-                      //       .toLowerCase()
-                      //       .indexOf(input.toLowerCase()) >= 0
-                      //   );
-                      // }}
                       onChange={(value) => {
                         const model = vehicleModels.find(
                           (item) => item.id === value
@@ -627,8 +671,8 @@ export const AppointmentBookingModal = (props) => {
                   </Form.Item>
                 </Col>
               </Row>
-              <Row gutter={5}>
-                <Col span={12}>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Vehicle Model Year"
                     name="vehicleModelYear"
@@ -643,7 +687,9 @@ export const AppointmentBookingModal = (props) => {
                     <Input type="number" placeholder="Vehicle Model Year" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+              </Row>
+              <Row>
+                <Col span={24}>
                   <Form.Item
                     label="Milage(KM)"
                     name="KmReading"
@@ -658,14 +704,99 @@ export const AppointmentBookingModal = (props) => {
                     <Input
                       addonAfter="KM"
                       type="number"
-                      placeholder="Vehicle Reading(KM)"
+                      placeholder="Vehicle Milage(KM)"
                     />
                   </Form.Item>
                 </Col>
               </Row>
-            </Form>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={24}>
+              <Divider>Booking Operations/Status</Divider>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={12}>
+              <Form.Item
+                name="vehicleOperationIds"
+                label="Operations"
+                rules={[
+                  {
+                    required: false,
+                    message: "Please select Vehicle Operations",
+                  },
+                ]}
+              >
+                <Select
+                  mode="multiple"
+                  placeholder="Select Vehicle Operations"
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) => {
+                    return (
+                      option.children
+                        .toLowerCase()
+                        .indexOf(input.toLowerCase()) >= 0
+                    );
+                  }}
+                  style={{ width: "100%" }}
+                >
+                  {vehicleOperations.map((operation) => {
+                    return (
+                      <Select.Option value={operation.id}>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Text>{operation.name}</Text>
+                          <Text type="secondary" italic>
+                            {`${operation.timeHours} Hours`}
+                          </Text>
+                        </div>
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={12}>
+              <Form.Item
+                name="statusId"
+                label="Booking Status"
+                rules={[
+                  {
+                    required: true,
+                    message: "Please select Booking Status",
+                  },
+                ]}
+              >
+                <Select
+                  placeholder="Select Booking Status"
+                  style={{ width: "100%" }}
+                  onChange={(value) => {
+                    const status = bookingStatuses.find(
+                      (item) => item.id === value
+                    );
+                    setSelectedBookingStatus(status);
+                  }}
+                >
+                  {bookingStatuses.map((bookingStatus) => {
+                    return (
+                      <Select.Option value={bookingStatus.id}>
+                        {bookingStatus.name}
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
       </>
     );
   };
@@ -675,7 +806,7 @@ export const AppointmentBookingModal = (props) => {
     return (
       <>
         <Row justify="center">
-          <Col span={12}>
+          <Col span={24}>
             <Card
               // title="Confirm Details"
               style={{ marginTop: "20px" }}
@@ -727,22 +858,50 @@ export const AppointmentBookingModal = (props) => {
                 Vehicle Details
               </Divider>
               <div style={{ ...divContainer, marginTop: "10px" }}>
-                <Text type="secondary">vehicle Registeration No.:</Text>
+                <Text type="secondary">Vehicle Registeration No.:</Text>
                 <Text strong>{formValues.vehicleRegNo}</Text>
               </div>
               <div style={{ ...divContainer, marginTop: "10px" }}>
-                <Text type="secondary">vehicle Model:</Text>
+                <Text type="secondary">Vehicle Model:</Text>
                 <Text strong>
                   {selectedVehicleModel ? selectedVehicleModel.desc : "N/A"}
                 </Text>
               </div>
               <div style={{ ...divContainer, marginTop: "10px" }}>
-                <Text type="secondary">vehicle Model Year:</Text>
+                <Text type="secondary">Vehicle Model Year:</Text>
                 <Text strong>{formValues.vehicleModelYear}</Text>
               </div>
               <div style={{ ...divContainer, marginTop: "10px" }}>
                 <Text type="secondary">Milage(KM):</Text>
                 <Text strong>{UAEFormatNumber(formValues.KmReading)} KM</Text>
+              </div>
+              <Divider style={{ margin: "10px 0px" }} orientation="left">
+                Booking Operations/Status
+              </Divider>
+              <div style={{ ...divContainer, marginTop: "10px" }}>
+                <Text type="secondary">Booking Operations:</Text>
+                <div>
+                  {formValues.vehicleOperationIds.map((id) => {
+                    const operation = vehicleOperations.find(
+                      (item) => item.id === id
+                    );
+                    return (
+                      <Tag
+                        strong
+                        style={{
+                          marginInlineEnd: "0px",
+                          marginInlineStart: "8px",
+                        }}
+                      >
+                        {`${operation.name}(${operation.timeHours} hr)`}
+                      </Tag>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ ...divContainer, marginTop: "10px" }}>
+                <Text type="secondary">Booking Status:</Text>
+                <Text strong>{selectedBookingStatus.name}</Text>
               </div>
             </Card>
           </Col>
@@ -769,7 +928,14 @@ export const AppointmentBookingModal = (props) => {
         maskClosable={false}
         open={open}
         onOk={onOk}
-        onCancel={onCancel}
+        onCancel={() => {
+          setSelectedVehicleModel(null);
+          if (bookingStatuses.length) {
+            setSelectedBookingStatus(bookingStatuses[0]);
+          }
+          form.resetFields();
+          onCancel();
+        }}
         width={1200}
         footer={[
           <div
