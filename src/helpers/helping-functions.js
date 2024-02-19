@@ -80,3 +80,11 @@ export const UAEFormatNumber = (value) => {
 export const twenty4HourTo12Hour = (value) => {
   return moment(value, "h:mm:ss").format("hh:mm A");
 };
+
+export const getTechniciansTotalAvailableTime = (numberOfTechnicians) => {
+  const percentage = 85;
+  const technicianWorkingHours = 10;
+  return Math.round(
+    (percentage / 100) * (numberOfTechnicians * technicianWorkingHours)
+  );
+};

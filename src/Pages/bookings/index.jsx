@@ -1,12 +1,12 @@
 import * as React from "react";
 import dayjs from "dayjs";
-
 import {
   Badge,
   Button,
   Card,
   Col,
   DatePicker,
+  Divider,
   Form,
   Popover,
   Row,
@@ -22,6 +22,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import {
   getAllDaysInMonth,
   getDaysInWeek,
+  getTechniciansTotalAvailableTime,
   padTo2Digits,
   twenty4HourTo12Hour,
 } from "../../helpers/helping-functions";
@@ -35,11 +36,12 @@ import {
   getSlotsFetch,
   getBookingTransactions,
   setScreenLoader,
-  getServiceAdvisors,
+  getServiceStaff,
   getVehicleModelsFetch,
   getAvailableSlotsFetch,
   getBookingStatusesFetch,
   getVehicleOprationsAction,
+  getStaffHolidatByMonthAndServiceCenter,
 } from "../../redux/actions";
 import { useNavigate } from "react-router-dom";
 
@@ -72,24 +74,32 @@ const BookAppointment = () => {
   const { loading: bookingStatusesLoading, list: bookingStatuses } =
     useSelector((state) => state.bookingStatuses);
   const {
-    loading: bookingTransactionsLoading,
-    list: bookingTransactions,
+    // loading: bookingTransactionsLoading,
+    // list: bookingTransactions,
     addLoading: createBookingLoading,
     addSuccess: createBookingSuccess,
     updateLoading: updateBookingLoading,
     updateSuccess: updateBookingSuccess,
+    byMonthAndServiceCenter: byMonthAndServiceCenterBookings,
   } = useSelector((state) => state.bookingTransactions);
+  const { loading: bookingTransactionsLoading, list: bookingTransactions } =
+    byMonthAndServiceCenterBookings;
 
   const { loading: availableSlotsLoading, list: availableSlots } = useSelector(
     (state) => state.availableTimeSlots
+  );
+
+  const { loading: staffHolidaysLoading, list: staffHolidays } = useSelector(
+    (state) => state.staffHolidays.byMonthAndServiceCenter
   );
 
   const { loading: vehicleModelsLoading, list: vehicleModels } = useSelector(
     (state) => state.vehicleModels
   );
 
-  const { loading: serviceAdvisorsLoading, list: serviceAdvisors } =
-    useSelector((state) => state.serviceAdvisors);
+  const { loading: serviceCenterStaffLoading, list: serviceCenterStaff } =
+    useSelector((state) => state.serviceCenterStaff);
+
   const { loading: vehicleOperationsLoading, list: vehicleOperations } =
     useSelector((state) => state.vehicleOperations);
 
@@ -113,13 +123,10 @@ const BookAppointment = () => {
   const [selectedAppointmentOperationIds, setSelectedAppointmentOperationIds] =
     React.useState([]);
 
-  const [monthDatesColumns, setMonthDatesColumns] = React.useState([
-    {
-      title: "Slot",
-      dataIndex: "slot",
-      key: "slot",
-    },
-  ]);
+  const [serviceAdvisors, setServiceAdvisors] = React.useState([]);
+  const [serviceTechnicians, setServiceTechnicians] = React.useState([]);
+
+  const [monthDatesColumns, setMonthDatesColumns] = React.useState([]);
   const [morningSlots, setMorningSlots] = React.useState([]);
   const [afternoonSlots, setAfternoonSlots] = React.useState([]);
   const [tableData, setTableData] = React.useState([]);
@@ -136,6 +143,7 @@ const BookAppointment = () => {
     KmReading: "",
     vehicleOperationIds: [],
     statusId: 1,
+    remarks: "",
   });
 
   const [isEditing, setisEditing] = React.useState(false);
@@ -155,9 +163,20 @@ const BookAppointment = () => {
 
   React.useEffect(() => {
     if (selectedServiceCenter) {
-      dispatch(getServiceAdvisors(navigate, selectedServiceCenter.code));
+      dispatch(getServiceStaff(navigate, selectedServiceCenter.code));
     }
   }, [selectedServiceCenter]);
+
+  React.useEffect(() => {
+    if (serviceCenterStaff.length) {
+      const advisors = serviceCenterStaff.filter((item) => item.roleId === 3);
+      const technicians = serviceCenterStaff.filter(
+        (item) => item.roleId === 4
+      );
+      setServiceAdvisors(advisors);
+      setServiceTechnicians(technicians);
+    }
+  }, [serviceCenterStaff]);
 
   React.useEffect(() => {
     if (selectedMonth && selectedYear && selectedServiceCenter) {
@@ -165,8 +184,34 @@ const BookAppointment = () => {
       dispatch(
         getBookingTransactions(navigate, date, selectedServiceCenter.code)
       );
+      dispatch(
+        getStaffHolidatByMonthAndServiceCenter(
+          navigate,
+          date,
+          selectedServiceCenter.code
+        )
+      );
     }
-  }, [selectedMonth, selectedYear, selectedServiceCenter]);
+  }, [dispatch, navigate, selectedMonth, selectedYear, selectedServiceCenter]);
+
+  // React.useEffect(() => {
+  //   const intervalCall = setInterval(() => {
+  //     if (selectedMonth && selectedYear && selectedServiceCenter) {
+  //       const date = `${padTo2Digits(selectedMonth)}-${selectedYear}`;
+  //       dispatch(
+  //         getBookingTransactions(
+  //           navigate,
+  //           date,
+  //           selectedServiceCenter.code,
+  //           true
+  //         )
+  //       );
+  //     }
+  //   }, 15000);
+  //   return () => {
+  //     clearInterval(intervalCall);
+  //   };
+  // }, [dispatch, navigate, selectedMonth, selectedYear, selectedServiceCenter]);
 
   React.useEffect(() => {
     if (appointmentBookingModalOpen && selectedDate && selectedServiceCenter) {
@@ -175,36 +220,6 @@ const BookAppointment = () => {
       dispatch(getAvailableSlotsFetch(navigate, fdate, code));
     }
   }, [appointmentBookingModalOpen, selectedDate, selectedServiceCenter]);
-
-  React.useEffect(() => {
-    // const allDatesInMonth = getAllDaysInMonth(selectedMonth, selectedYear);
-    const allDatesInMonth = getDaysInWeek(new Date());
-    const formatedDatesInMonth = allDatesInMonth.map((date) => {
-      return {
-        key: `${padTo2Digits(date.getFullYear())}-${padTo2Digits(
-          date.getMonth() + 1
-        )}-${padTo2Digits(date.getDate())}`,
-        value: date.toLocaleDateString([], { month: "short", day: "numeric" }),
-        dayValue: date.getDay(),
-        dayName: date.toLocaleDateString("en-us", { weekday: "short" }),
-      };
-    });
-    setMonthDates(formatedDatesInMonth);
-  }, [selectedMonth, selectedYear]);
-
-  React.useEffect(() => {
-    renderColumnsCallback(monthDates);
-  }, [monthDates, bookingTransactions]);
-
-  React.useEffect(() => {
-    if (monthDatesColumns.length && dayRef.current) {
-      dayRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-        inline: "start",
-      });
-    }
-  }, [monthDatesColumns]);
 
   React.useEffect(() => {
     if (timeSlots.length) {
@@ -216,7 +231,7 @@ const BookAppointment = () => {
         const mints = timeArr[1];
         if (
           moment({ hour: hours, minute: mints }).isSameOrBefore(
-            moment({ hour: "14", minute: "00" })
+            moment({ hour: "12", minute: "00" })
           )
         ) {
           morningS.push(timeSlot);
@@ -230,15 +245,108 @@ const BookAppointment = () => {
   }, [timeSlots]);
 
   React.useEffect(() => {
-    if (timeSlots.length && monthDates.length) {
+    const operationTotalHours = vehicleOperations.reduce(
+      (accumulator, operationItem) => {
+        return (accumulator += operationItem.timeHours);
+      },
+      0
+    );
+    var operationMinHours = Math.min(
+      ...vehicleOperations.map((item) => item.timeHours)
+    );
+    // const allDatesInMonth = getAllDaysInMonth(selectedMonth, selectedYear);
+    const allDatesInMonth = getDaysInWeek(new Date());
+    const formatedDatesInMonth = allDatesInMonth.map((date) => {
+      const dateKey = `${padTo2Digits(date.getFullYear())}-${padTo2Digits(
+        date.getMonth() + 1
+      )}-${padTo2Digits(date.getDate())}`;
+      const dateValue = date.toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+      });
+
       const todayDate = moment().format("YYYY-MM-DD");
+      const dayValue = date.getDay();
+      const dayName = date.toLocaleDateString("en-us", { weekday: "short" });
+      const isSunday = date.getDay() === 0;
+      const isSameOfFutureDate = moment(todayDate).isSameOrBefore(
+        moment(dateKey)
+      );
+      const transactions = bookingTransactions.filter(
+        (bookingTransaction) => bookingTransaction.bookingDate === dateKey
+      );
+      const availableTechnicians = serviceTechnicians.filter((technician) => {
+        return !staffHolidays.find(
+          (holiday) =>
+            holiday.userId === technician.userId && holiday.date === dateKey
+        );
+      });
+      const availableAdvisors = serviceAdvisors.filter((advisor) => {
+        return !staffHolidays.find(
+          (holiday) =>
+            holiday.userId === advisor.userId && holiday.date === dateKey
+        );
+      });
+      // const techniciansAvailableTime = availableTechnicians.length * 10;
+      const techniciansAvailableTime = getTechniciansTotalAvailableTime(
+        availableTechnicians.length
+      );
+      let dateBookedHours = 0;
+      for (var transaction of transactions) {
+        let transactionDoneTime = 0;
+        const transactionOperations = transaction.vehicleOperations;
+        transactionDoneTime = transactionOperations.reduce(
+          (accumulator, operationItem) => {
+            return (accumulator += operationItem.timeHours);
+          },
+          0
+        );
+        dateBookedHours += transactionDoneTime;
+        // if (transaction.statusId === 5) {
+        // } else {
+        //   dateBookedHours += operationTotalHours;
+        // }
+      }
+      const remainingHours = techniciansAvailableTime - dateBookedHours;
+
+      return {
+        key: dateKey,
+        value: dateValue,
+        dayValue,
+        dayName,
+        transactionsCount: transactions.length,
+        availableAdvisors: availableAdvisors,
+        availableTechnicians: availableTechnicians,
+        totalAvailableHours: techniciansAvailableTime,
+        // remainingHours: remainingHours < 0 ? 0 : remainingHours,
+        remainingHours: remainingHours,
+        bookedHours: dateBookedHours,
+        isAvailable: remainingHours >= operationMinHours,
+        disabled: isSunday || !isSameOfFutureDate,
+      };
+    });
+    setMonthDates(formatedDatesInMonth);
+  }, [
+    selectedMonth,
+    selectedYear,
+    vehicleOperations,
+    bookingTransactions,
+    serviceTechnicians,
+    serviceAdvisors,
+    staffHolidays,
+  ]);
+
+  React.useEffect(() => {
+    renderColumnsCallback(monthDates);
+  }, [monthDates, bookingTransactions]);
+
+  React.useEffect(() => {
+    if (timeSlots.length && monthDates.length) {
       const td = timeSlots.map((slot) => {
         let dataObject = {
           time: slot.startTime,
         };
         for (const monthDate of monthDates) {
-          // const monthDay = new Date(monthDate["value"]).getDate();
-
           const transactions = bookingTransactions.filter(
             (bookingTransaction) =>
               bookingTransaction.bookingDate === monthDate.key &&
@@ -248,16 +356,13 @@ const BookAppointment = () => {
             date: monthDate.key,
             slot: slot,
             day: monthDate.dayValue,
-            transactions: transactions.length,
+            disabled: monthDate.disabled,
+            transactionsCount: transactions.length,
             availableSlots:
-              selectedServiceCenter &&
-              selectedServiceCenter.slotCapacity - transactions.length,
-            disabled:
-              !moment(todayDate).isSameOrBefore(moment(monthDate.key)) ||
-              monthDate.dayValue === 0,
+              monthDate.availableAdvisors.length - transactions.length,
             isAvailable:
-              selectedServiceCenter &&
-              selectedServiceCenter.slotCapacity > transactions.length,
+              monthDate.availableAdvisors.length > transactions.length &&
+              monthDate.isAvailable,
           };
         }
         return dataObject;
@@ -265,41 +370,7 @@ const BookAppointment = () => {
 
       setTableData(td);
     }
-  }, [timeSlots, monthDates, bookingTransactions, selectedServiceCenter]);
-
-  React.useEffect(() => {
-    if (selectedAppointmentToUpdate) {
-      setisEditing(true);
-      const slotCode = selectedAppointmentToUpdate.slotCode;
-      const timeSlot = timeSlots.find((item) => item.code === slotCode);
-      setSelectedDate(selectedAppointmentToUpdate.bookingDate);
-      setSelectedTimeSlot(timeSlot);
-      const updateFormValues = {
-        serviceAdvisor: selectedAppointmentToUpdate.serviceAdvisorId
-          ? Number(selectedAppointmentToUpdate.serviceAdvisorId)
-          : null,
-        customerName: selectedAppointmentToUpdate.customerName,
-        customerMobile: selectedAppointmentToUpdate.customerMobile,
-        customerEmail: selectedAppointmentToUpdate.customerEmail,
-        vehicleRegNo: selectedAppointmentToUpdate.vehicleRegNumber,
-        vehicleModel: Number(selectedAppointmentToUpdate.vehicleModelCode),
-        vehicleModelYear: Number(selectedAppointmentToUpdate.vehicleModelYear),
-        KmReading: selectedAppointmentToUpdate.kmReading,
-        statusId: selectedAppointmentToUpdate.statusId,
-      };
-      const selectedOperationIds =
-        selectedAppointmentToUpdate.vehicleOperations.map(
-          (vehicleOperation) => {
-            return vehicleOperation.operationId;
-          }
-        );
-      setSelectedAppointmentOperationIds(selectedOperationIds);
-      updateFormValues["vehicleOperationIds"] = selectedOperationIds;
-      customerForm.setFieldsValue(updateFormValues);
-
-      showAppointmentBookingModal();
-    }
-  }, [selectedAppointmentToUpdate]);
+  }, [timeSlots, monthDates, bookingTransactions]);
 
   const renderColumnsCallback = React.useCallback(() => {
     if (monthDates.length) {
@@ -322,7 +393,7 @@ const BookAppointment = () => {
         const currentYear = moment().year();
         let divRef = null;
         if (
-          moment().date() - 2 === new Date(date.value).getDate() &&
+          moment().date() - 2 === new Date(date.key).getDate() &&
           currentMonth === selectedMonth &&
           currentYear === selectedYear
         ) {
@@ -335,7 +406,45 @@ const BookAppointment = () => {
         }
         return {
           title: () => {
-            return <div ref={divRef}>{`${date.value} (${date.dayName})`}</div>;
+            return (
+              <div ref={divRef} style={{ cursor: "pointer" }}>
+                <Popover
+                  overlayStyle={{ whiteSpace: "pre-line" }}
+                  placement="top"
+                  title="Day Details"
+                  content={
+                    <>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        {!date.disabled && (
+                          <Text>
+                            Remaining Hours: {`${date.remainingHours}`}
+                          </Text>
+                        )}
+                        <Text>Booked Hours: {`${date.bookedHours}`}</Text>
+                      </div>
+                    </>
+                  }
+                >
+                  <Text>{`${date.value} (${date.dayName}) `}</Text>
+                  <Text
+                    style={{
+                      color:
+                        date.remainingHours < 0
+                          ? token.colorError
+                          : token.colorTextBase,
+                    }}
+                  >
+                    {`Remaining: ${date.remainingHours}
+                  ${date.remainingHours === 1 ? "Hr" : "Hrs"}`}
+                  </Text>
+                </Popover>
+              </div>
+            );
           },
           dataIndex: date.key,
           key: date.key,
@@ -346,8 +455,8 @@ const BookAppointment = () => {
               <div style={{ display: "flex", flexDirection: "column" }}>
                 <Text>Date: {`${date.value}, ${selectedYear}`}</Text>
                 <Text>Time: {twenty4HourTo12Hour(row.time)}</Text>
-                <Text>Booked: {value.transactions}</Text>
-                {!value.disabled && (
+                <Text>Booked: {value.transactionsCount}</Text>
+                {!value.disabled && value.isAvailable && (
                   <Text>Available: {value.availableSlots}</Text>
                 )}
               </div>
@@ -391,7 +500,10 @@ const BookAppointment = () => {
                         handleAppointmentsViewClick(clickedDate, slotCode);
                       }}
                     >
-                      <Badge size="default" count={value.transactions}></Badge>
+                      <Badge
+                        size="default"
+                        count={value.transactionsCount}
+                      ></Badge>
                     </div>
                     {!value.disabled && value.isAvailable && (
                       <PlusOutlined
@@ -426,14 +538,66 @@ const BookAppointment = () => {
       });
       setMonthDatesColumns((prev) => [...prev, ...columns]);
     }
-  }, [monthDates, bookingTransactions]);
+  }, [monthDates, bookingTransactions, selectedMonth, selectedYear]);
+
+  React.useEffect(() => {
+    if (monthDatesColumns.length && dayRef.current) {
+      dayRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+        inline: "start",
+      });
+    }
+  }, [monthDatesColumns]);
+
+  React.useEffect(() => {
+    if (selectedAppointmentToUpdate) {
+      setisEditing(true);
+      const slotCode = selectedAppointmentToUpdate.slotCode;
+      const timeSlot = timeSlots.find((item) => item.code === slotCode);
+      setSelectedDate(selectedAppointmentToUpdate.bookingDate);
+      setSelectedTimeSlot(timeSlot);
+      const updateFormValues = {
+        serviceAdvisor: selectedAppointmentToUpdate.serviceAdvisorId
+          ? Number(selectedAppointmentToUpdate.serviceAdvisorId)
+          : null,
+        customerName: selectedAppointmentToUpdate.customerName,
+        customerMobile: selectedAppointmentToUpdate.customerMobile,
+        customerEmail: selectedAppointmentToUpdate.customerEmail,
+        vehicleRegNo: selectedAppointmentToUpdate.vehicleRegNumber,
+        vehicleModel: Number(selectedAppointmentToUpdate.vehicleModelCode),
+        vehicleModelYear: Number(selectedAppointmentToUpdate.vehicleModelYear),
+        KmReading: selectedAppointmentToUpdate.kmReading,
+        statusId: selectedAppointmentToUpdate.statusId,
+        remarks: selectedAppointmentToUpdate.remarks,
+      };
+      const selectedOperationIds =
+        selectedAppointmentToUpdate.vehicleOperations.map(
+          (vehicleOperation) => {
+            return vehicleOperation.operationId;
+          }
+        );
+      setSelectedAppointmentOperationIds(selectedOperationIds);
+      updateFormValues["vehicleOperationIds"] = selectedOperationIds;
+      customerForm.setFieldsValue(updateFormValues);
+      showAppointmentBookingModal();
+    }
+  }, [selectedAppointmentToUpdate, timeSlots, customerForm]);
 
   const handleAppointmentsViewClick = (date, slotCode) => {
-    const appointments = bookingTransactions.filter(
-      (bookingTransaction) =>
-        bookingTransaction.bookingDate === date &&
-        bookingTransaction.slotCode === slotCode
-    );
+    var now = new Date().getTime();
+    const appointments = bookingTransactions
+      .filter(
+        (bookingTransaction) =>
+          bookingTransaction.bookingDate === date &&
+          bookingTransaction.slotCode === slotCode
+      )
+      .map((item) => {
+        return {
+          ...item,
+          uuid: now,
+        };
+      });
     setSelectedDateSlotAppointments(appointments);
     showAppointmentsModal();
   };
@@ -471,11 +635,31 @@ const BookAppointment = () => {
           <Card
             title={
               <Title level={3} style={{ marginTop: "0.5em" }}>
-                Appointments
+                Bookings
               </Title>
             }
             style={{ borderRadius: "8px" }}
           >
+            {/* <Row justify="center">
+              <Col span={6}>
+                <Select
+                  style={{ width: "100%" }}
+                  // defaultValue={selectedServiceCenter.code}
+                  onChange={(value) => {
+                    // const selected = profile.serviceCenters.find(
+                    //   (item) => item.code === value
+                    // );
+                    // setSelectedServiceCenter(selected);
+                  }}
+                  options={serviceAdvisors.map((serviceAdvisor) => {
+                    return {
+                      value: serviceAdvisor.userId,
+                      label: serviceAdvisor.userName,
+                    };
+                  })}
+                />
+              </Col>
+            </Row> */}
             <Row justify="space-between" style={{ marginBottom: "10px" }}>
               <Col span={20}>
                 <Row gutter={[4]}>
@@ -545,7 +729,7 @@ const BookAppointment = () => {
                     showAppointmentBookingModal();
                   }}
                 >
-                  Add Appointment
+                  Add Booking
                 </Button>
               </Col>
             </Row>
@@ -576,7 +760,8 @@ const BookAppointment = () => {
                     spinning:
                       profileLoading ||
                       timeSlotsLoading ||
-                      bookingTransactionsLoading,
+                      bookingTransactionsLoading ||
+                      staffHolidaysLoading,
                   }}
                   pagination={false}
                 />
@@ -601,7 +786,6 @@ const BookAppointment = () => {
         availableSlots={availableSlots}
         vehicleModelsLoading={vehicleModelsLoading}
         vehicleModels={vehicleModels}
-        serviceAdvisorsLoading={serviceAdvisorsLoading}
         serviceAdvisors={serviceAdvisors}
         createBookingLoading={createBookingLoading}
         createBookingSuccess={createBookingSuccess}
@@ -620,12 +804,16 @@ const BookAppointment = () => {
         vehicleOperations={vehicleOperations}
         selectedAppointmentOperationIds={selectedAppointmentOperationIds}
         setSelectedAppointmentOperationIds={setSelectedAppointmentOperationIds}
+        serviceTechnicians={serviceTechnicians}
+        staffHolidays={staffHolidays}
+        bookingTransactions={bookingTransactions}
       />
       <AppointmentsModal
         open={appointmentsModalOpen}
         onOk={handleAppointmentsModalOk}
         onCancel={handleAppointmentsCancel}
         appointments={selectedDateSlotAppointments}
+        setAppointments={setSelectedDateSlotAppointments}
         selectedAppointment={selectedAppointmentToUpdate}
         setSelectedAppointment={setSelectedAppointmentToUpdate}
         bookingStatusesLoading={bookingStatusesLoading}

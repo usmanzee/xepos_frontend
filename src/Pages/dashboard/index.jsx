@@ -1,7 +1,19 @@
 import React from "react";
-import { Card, Col, Row, Table, Typography, theme } from "antd";
+import dayjs from "dayjs";
+import {
+  Avatar,
+  Card,
+  Col,
+  DatePicker,
+  Row,
+  Select,
+  Table,
+  Typography,
+  theme,
+} from "antd";
 import {
   UAEFormatNumber,
+  padTo2Digits,
   twenty4HourTo12Hour,
 } from "../../helpers/helping-functions";
 import {
@@ -10,263 +22,80 @@ import {
   FileDoneOutlined,
   UsergroupAddOutlined,
 } from "@ant-design/icons";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import moment from "moment";
+import {
+  getBookingTransactions,
+  getBookingTransactionsByMonth,
+} from "../../redux/BookingTransactionActions";
+import { getBookingStatusesFetch } from "../../redux/actions";
 
 const { Title, Text } = Typography;
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { token } = theme.useToken();
+  const dateMonthFormat = "YYYY-MM";
 
-  const data = [
-    {
-      id: 9,
-      bookingDate: "2024-01-02",
-      slotCode: "05",
-      slotStartTime: "09:20:00",
-      slotEndTime: "09:40:00",
-      slotName: "09:20 to 09:40",
-      locationCode: "MG10",
-      customerName: "sathish",
-      customerMobile: "0527801493",
-      customerEmail: "satkkd@gmail.com",
-      vehicleRegNumber: "SHJ2 13259",
-      vehicleModelCode: "2",
-      vehicleModelYear: "2021",
-      kmReading: "40,000",
-      bookingSource: "API",
-      bookingDateTime: "05/01/2024 12:15:00 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 10,
-      bookingDate: "2024-01-02",
-      slotCode: "06",
-      slotStartTime: "09:40:00",
-      slotEndTime: "10:00:00",
-      slotName: "09:40 to 10:00",
-      locationCode: "MG10",
-      customerName: "sathish",
-      customerMobile: "0527801493",
-      customerEmail: "satkkd@gmail.com",
-      vehicleRegNumber: "SHJ2 13259",
-      vehicleModelCode: "2",
-      vehicleModelYear: "2021",
-      kmReading: "40,000",
-      bookingSource: "API",
-      bookingDateTime: "05/01/2024 12:22:57 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 23,
-      bookingDate: "2024-01-25",
-      slotCode: "01",
-      slotStartTime: "08:00:00",
-      slotEndTime: "08:20:00",
-      slotName: "08:00 to 08:20",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 4:37:27 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 24,
-      bookingDate: "2024-01-25",
-      slotCode: "02",
-      slotStartTime: "08:20:00",
-      slotEndTime: "08:40:00",
-      slotName: "08:20 to 08:40",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 4:38:59 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 25,
-      bookingDate: "2024-01-25",
-      slotCode: "08",
-      slotStartTime: "10:20:00",
-      slotEndTime: "10:40:00",
-      slotName: "10:20 to 10:40",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 6:39:28 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 26,
-      bookingDate: "2024-01-25",
-      slotCode: "08",
-      slotStartTime: "10:20:00",
-      slotEndTime: "10:40:00",
-      slotName: "10:20 to 10:40",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 6:39:30 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 27,
-      bookingDate: "2024-01-25",
-      slotCode: "08",
-      slotStartTime: "10:20:00",
-      slotEndTime: "10:40:00",
-      slotName: "10:20 to 10:40",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 6:39:31 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 31,
-      bookingDate: "2024-01-30",
-      slotCode: "01",
-      slotStartTime: "08:00:00",
-      slotEndTime: "08:20:00",
-      slotName: "08:00 to 08:20",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "30/01/2024 11:05:37 AM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 8,
-      bookingDate: "2024-01-02",
-      slotCode: "04",
-      slotStartTime: "09:00:00",
-      slotEndTime: "09:20:00",
-      slotName: "09:00 to 09:20",
-      locationCode: "MG10",
-      customerName: "sathish",
-      customerMobile: "0527801493",
-      customerEmail: "satkkd@gmail.com",
-      vehicleRegNumber: "SHJ2 13259",
-      vehicleModelCode: "2",
-      vehicleModelYear: "2020",
-      kmReading: "40,000",
-      bookingSource: "API",
-      bookingDateTime: "05/01/2024 11:54:25 AM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 12,
-      bookingDate: "2024-01-22",
-      slotCode: "01",
-      slotStartTime: "08:00:00",
-      slotEndTime: "08:20:00",
-      slotName: "08:00 to 08:20",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "22/01/2024 4:49:29 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 15,
-      bookingDate: "2024-01-25",
-      slotCode: "02",
-      slotStartTime: "08:20:00",
-      slotEndTime: "08:40:00",
-      slotName: "08:20 to 08:40",
-      locationCode: "MG10",
-      customerName: "M Usman",
-      customerMobile: "123456789",
-      customerEmail: "usman@ali-sons.com",
-      vehicleRegNumber: "reg-123",
-      vehicleModelCode: "1",
-      vehicleModelYear: "2020",
-      kmReading: "20000",
-      bookingSource: "API",
-      bookingDateTime: "25/01/2024 4:24:50 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-    {
-      id: 11,
-      bookingDate: "2024-01-02",
-      slotCode: "20",
-      slotStartTime: "14:20:00",
-      slotEndTime: "14:40:00",
-      slotName: "14:20 to 14:40",
-      locationCode: "MG10",
-      customerName: "sathish",
-      customerMobile: "0527801493",
-      customerEmail: "satkkd@gmail.com",
-      vehicleRegNumber: "SHJ2 13259",
-      vehicleModelCode: "2",
-      vehicleModelYear: "2021",
-      kmReading: "40,000",
-      bookingSource: "API",
-      bookingDateTime: "05/01/2024 1:11:01 PM",
-      bookingBy: "system",
-      vehicleModelName: "MG 7",
-    },
-  ];
+  const { loading: profileLoading, data: profile } = useSelector(
+    (state) => state.profile
+  );
+  const { byMonthAndServiceCenter: byMonthAndServiceCenterBookings } =
+    useSelector((state) => state.bookingTransactions);
+  const { loading: bookingTransactionsLoading, list: bookingTransactions } =
+    byMonthAndServiceCenterBookings;
+
+  const [selectedYear, setSelectedYear] = React.useState(moment().year());
+  const [selectedMonth, setSelectedMonth] = React.useState(
+    moment().month() + 1
+  );
+  const [selectedServiceCenter, setSelectedServiceCenter] =
+    React.useState(null);
+
+  const { loading: bookingStatusesLoading, list: bookingStatuses } =
+    useSelector((state) => state.bookingStatuses);
+
+  React.useEffect(() => {
+    dispatch(getBookingStatusesFetch(navigate));
+  }, []);
+
+  React.useEffect(() => {
+    if (profile && profile.serviceCenters.length) {
+      setSelectedServiceCenter(profile.serviceCenters[0]);
+    }
+  }, [profile]);
+
+  React.useEffect(() => {
+    if (selectedMonth && selectedYear && selectedServiceCenter) {
+      const date = `${padTo2Digits(selectedMonth)}-${selectedYear}`;
+      dispatch(
+        getBookingTransactions(navigate, date, selectedServiceCenter.code)
+      );
+    }
+  }, [dispatch, navigate, selectedMonth, selectedYear, selectedServiceCenter]);
+
+  React.useEffect(() => {
+    const intervalCall = setInterval(() => {
+      const date = `${padTo2Digits(selectedMonth)}-${selectedYear}`;
+      dispatch(
+        getBookingTransactions(navigate, date, selectedServiceCenter.code, true)
+      );
+    }, 5000);
+    return () => {
+      clearInterval(intervalCall);
+    };
+  }, [dispatch, navigate, selectedMonth, selectedYear, selectedServiceCenter]);
 
   const columns = [
     {
-      title: "Date",
+      title: "Booking Date",
       dataIndex: "bookingDate",
       key: "bookingDate",
     },
     {
-      title: "Time Slot",
+      title: "Booking Time",
       dataIndex: "slotStartTime",
       key: "slotStartTime",
       render: (value) => {
@@ -289,7 +118,7 @@ const Dashboard = () => {
       key: "customerEmail",
     },
     {
-      title: "Vehicle Reg Number",
+      title: "Vehicle Reg. Number",
       dataIndex: "vehicleRegNumber",
       key: "vehicleRegNumber",
     },
@@ -312,83 +141,166 @@ const Dashboard = () => {
       },
     },
     {
-      title: "Booking DateTime",
+      title: "Booking Created At",
       dataIndex: "bookingDateTime",
       key: "bookingDateTime",
     },
     {
-      title: "Booking By",
+      title: "Booking Created By",
       dataIndex: "bookingBy",
       key: "bookingBy",
     },
-    // {
-    //   title: "Status",
-    //   dataIndex: "status",
-    //   key: "status",
-    // },
+    {
+      title: "Status",
+      dataIndex: "statusName",
+      key: "statusName",
+    },
   ];
 
+  const cardLoader = () => {
+    return (
+      <Card loading={true}>
+        <Card.Meta
+          avatar={
+            <Avatar src="https://api.dicebear.com/7.x/miniavs/svg?seed=1" />
+          }
+          title="Card title"
+          description="This is the description"
+        />
+      </Card>
+    );
+  };
   return (
     <>
-      <Row gutter={16}>
+      <Row gutter={[4]} style={{ marginBottom: "8px" }}>
+        <Col span={6}>
+          <DatePicker
+            style={{ width: "100%" }}
+            allowClear={false}
+            picker="month"
+            defaultValue={dayjs(dayjs(), dateMonthFormat)}
+            format={dateMonthFormat}
+            onChange={(date, dateString) => {
+              setSelectedMonth(date.month() + 1);
+              setSelectedYear(date.year());
+            }}
+          />
+        </Col>
+        <Col span={6}>
+          {selectedServiceCenter && (
+            <Select
+              style={{ width: "100%" }}
+              defaultValue={selectedServiceCenter.code}
+              onChange={(value) => {
+                const selected = profile.serviceCenters.find(
+                  (item) => item.code === value
+                );
+                setSelectedServiceCenter(selected);
+              }}
+              options={
+                profile &&
+                profile.serviceCenters.map((serviceCenter) => {
+                  return {
+                    value: serviceCenter.code,
+                    label: serviceCenter.name,
+                  };
+                })
+              }
+            />
+          )}
+        </Col>
+      </Row>
+      <Row>
         <Col span={24}>
-          <Row gutter={16}>
-            <Col span={6}>
-              <Card
-                title={
-                  <>
-                    <DatabaseOutlined style={{ color: token.colorPrimary }} />
-                    <Text strong style={{ marginLeft: "5px", fontSize: 16 }}>
-                      Total Appointments
-                    </Text>
-                  </>
-                }
-                bordered={false}
-              >
-                <div>
-                  <Title
-                    level={3}
-                    style={{
-                      marginTop: "0px",
-                      marginBottom: "2px",
-                      color: token.colorPrimary,
-                    }}
+          <Row gutter={8}>
+            {bookingTransactionsLoading ? (
+              [1, 2, 3, 4, 5, 6].map(() => {
+                return <Col span={4}>{cardLoader()}</Col>;
+              })
+            ) : (
+              <>
+                <Col span={4}>
+                  <Card
+                    title={
+                      <>
+                        {/* <DatabaseOutlined
+                          style={{ color: token.colorPrimary }}
+                        /> */}
+                        <Text
+                          strong
+                          style={{
+                            // marginLeft: "5px",
+                            fontSize: 16,
+                          }}
+                        >
+                          Total Bookings
+                        </Text>
+                      </>
+                    }
+                    bordered={false}
                   >
-                    100
-                  </Title>
-                  <Text type="secondary">Total Appointments</Text>
-                </div>
-              </Card>
-            </Col>
-            <Col span={6}>
-              <Card
-                title={
-                  <>
-                    <ClockCircleOutlined
-                      style={{ color: token.colorWarningText }}
-                    />
-                    <Text strong style={{ marginLeft: "5px", fontSize: 16 }}>
-                      In-Process
-                    </Text>
-                  </>
-                }
-                bordered={false}
-              >
-                <Title
-                  level={3}
-                  style={{
-                    marginTop: "0px",
-                    marginBottom: "2px",
-                    color: token.colorWarningText,
-                  }}
-                >
-                  10
-                </Title>
+                    <div>
+                      <Title
+                        level={3}
+                        style={{
+                          marginTop: "0px",
+                          marginBottom: "2px",
+                          color: token.colorPrimary,
+                        }}
+                      >
+                        {bookingTransactions.length}
+                      </Title>
+                      <Text type="secondary">Total Bookings</Text>
+                    </div>
+                  </Card>
+                </Col>
+                {bookingStatuses.map((item) => {
+                  const bookings = bookingTransactions.filter(
+                    (transaction) => transaction.statusId === item.id
+                  );
+                  return (
+                    item.id !== 4 && (
+                      <Col span={4}>
+                        <Card
+                          title={
+                            <>
+                              {/* <ClockCircleOutlined
+                                style={{ color: token.colorWarningText }}
+                              /> */}
+                              <Text
+                                strong
+                                style={{
+                                  // marginLeft: "5px",
+                                  fontSize: 14,
+                                }}
+                              >
+                                {item.name}
+                              </Text>
+                            </>
+                          }
+                          bordered={false}
+                        >
+                          <Title
+                            level={3}
+                            style={{
+                              marginTop: "0px",
+                              marginBottom: "2px",
+                              color: token.colorWarningText,
+                            }}
+                          >
+                            {bookings.length}
+                          </Title>
 
-                <Text type="secondary">In-Process</Text>
-              </Card>
-            </Col>
-            <Col span={6}>
+                          <Text type="secondary">{item.name}</Text>
+                        </Card>
+                      </Col>
+                    )
+                  );
+                })}
+              </>
+            )}
+
+            {/* <Col span={6}>
               <Card
                 title={
                   <>
@@ -441,7 +353,7 @@ const Dashboard = () => {
                 </Title>
                 <Text type="secondary">Customers</Text>
               </Card>
-            </Col>
+            </Col> */}
             {/* <Col span={6}>
               <Card title="Follow Up Customers" bordered={false}>
                 <Title
@@ -460,12 +372,12 @@ const Dashboard = () => {
           </Row>
         </Col>
       </Row>
-      <Row gutter={16} style={{ marginTop: "16px" }}>
+      <Row style={{ marginTop: "8px" }}>
         <Col span={24}>
           <Card
             title={
               <>
-                <DatabaseOutlined /> <Text>Today Appointments</Text>{" "}
+                <DatabaseOutlined /> <Text>Bookings</Text>{" "}
               </>
             }
             bordered={false}
@@ -475,7 +387,8 @@ const Dashboard = () => {
               rowKey="id"
               size="middle"
               columns={columns}
-              dataSource={data}
+              dataSource={bookingTransactions}
+              loading={bookingTransactionsLoading}
               pagination={false}
             />
           </Card>

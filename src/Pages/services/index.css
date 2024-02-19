@@ -1,0 +1,14 @@
+.in-proces-row {
+  background: rgb(217, 247, 190);
+
+  /* #fff1b8 */
+
+  /* #bae0ff */
+}
+.customer-arrived {
+  background-color: #fff1b8;
+}
+
+.customer-awaiting {
+  background-color: #bae0ff;
+}

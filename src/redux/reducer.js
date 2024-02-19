@@ -429,22 +429,95 @@ const bookingTransactionsReducer = (
       return {
         ...state,
         loading: true,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: true,
+        },
       };
     case types.BOOKING_TRANSACTIONS_DATA:
       return {
         ...state,
         loading: false,
         list: action.payload,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: false,
+          list: action.payload,
+        },
       };
     case types.BOOKING_TRANSACTIONS_ERROR:
       return {
         ...state,
         loading: false,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          loading: false,
+        },
+      };
+
+    case types.BOOKING_TRANSACTIONS_BY_MONTH_FETCH:
+      return {
+        ...state,
+        loading: true,
+        byMonth: {
+          ...state.byMonth,
+          loading: true,
+        },
+      };
+    case types.BOOKING_TRANSACTIONS_BY_MONTH_DATA:
+      return {
+        ...state,
+        loading: false,
+        list: action.payload,
+        byMonth: {
+          ...state.byMonth,
+          loading: false,
+          list: action.payload,
+        },
+      };
+    case types.BOOKING_TRANSACTIONS_BY_MONTH_ERROR:
+      return {
+        ...state,
+        loading: false,
+        byMonth: {
+          ...state.byMonth,
+          loading: false,
+        },
+      };
+    case types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_FETCH:
+      return {
+        ...state,
+        loading: true,
+        byTodayAndServiceCenter: {
+          ...state.byTodayAndServiceCenter,
+          loading: true,
+        },
+      };
+    case types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_DATA:
+      return {
+        ...state,
+        loading: false,
+        list: action.payload,
+        byTodayAndServiceCenter: {
+          ...state.byTodayAndServiceCenter,
+          loading: false,
+          list: action.payload,
+        },
+      };
+    case types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_ERROR:
+      return {
+        ...state,
+        loading: false,
+        byTodayAndServiceCenter: {
+          ...state.byTodayAndServiceCenter,
+          loading: false,
+        },
       };
     case types.BOOKING_TRANSACTION_CREATE_FETCH:
       return {
         ...state,
         addLoading: true,
+        addSuccess: false,
       };
     case types.BOOKING_TRANSACTION_CREATE_SUCCESS:
       return {
@@ -452,6 +525,10 @@ const bookingTransactionsReducer = (
         addLoading: false,
         addSuccess: true,
         list: [...state.list, action.payload],
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          list: [...state.byMonthAndServiceCenter.list, action.payload],
+        },
       };
     case types.BOOKING_TRANSACTION_CREATE_ERROR:
       return {
@@ -463,14 +540,22 @@ const bookingTransactionsReducer = (
       return {
         ...state,
         updateLoading: true,
+        updateSuccess: false,
       };
     case types.BOOKING_TRANSACTION_UPDATE_SUCCESS:
       let newList = state.list;
+      let newByMonthAndServiceCenter = state.byMonthAndServiceCenter.list;
       if (action.payload.statusId === 6) {
         newList = state.list.filter((item) => item.id !== action.payload.id);
+        newByMonthAndServiceCenter = state.byMonthAndServiceCenter.list.filter(
+          (item) => item.id !== action.payload.id
+        );
       } else {
         newList = state.list.map((item) =>
           item.id === action.payload.id ? action.payload : item
+        );
+        newByMonthAndServiceCenter = state.byMonthAndServiceCenter.list.map(
+          (item) => (item.id === action.payload.id ? action.payload : item)
         );
       }
       return {
@@ -478,11 +563,16 @@ const bookingTransactionsReducer = (
         updateLoading: false,
         updateSuccess: true,
         list: newList,
+        byMonthAndServiceCenter: {
+          ...state.byMonthAndServiceCenter,
+          list: newByMonthAndServiceCenter,
+        },
       };
     case types.BOOKING_TRANSACTION_UPDATE_ERROR:
       return {
         ...state,
         updateLoading: false,
+        updateSuccess: false,
         updateError: false,
       };
     default:
@@ -490,23 +580,23 @@ const bookingTransactionsReducer = (
   }
 };
 
-const serviceAdvisorsReducer = (
-  state = initialState.serviceAdvisors,
+const serviceCenterStaffReducer = (
+  state = initialState.serviceCenterStaff,
   action
 ) => {
   switch (action.type) {
-    case types.SERVICE_ADVISORS_FETCH:
+    case types.SERVICE_CENTER_STAFF_FETCH:
       return {
         ...state,
         loading: true,
       };
-    case types.SERVICE_ADVISORS_DATA:
+    case types.SERVICE_CENTER_STAFF_DATA:
       return {
         ...state,
         loading: false,
         list: action.payload,
       };
-    case types.SERVICE_ADVISORS_ERROR:
+    case types.SERVICE_CENTER_STAFF_ERROR:
       return {
         ...state,
         loading: false,
@@ -645,7 +735,7 @@ const rootReducer = combineReducers({
   availableTimeSlots: availableSlotsReducer,
   bookingTransactions: bookingTransactionsReducer,
   screenLoader: screenLoaderReducer,
-  serviceAdvisors: serviceAdvisorsReducer,
+  serviceCenterStaff: serviceCenterStaffReducer,
   customersByMobile: customersByMobileReducer,
   staffHolidays: staffHolidaysReducer,
   vehicleOperations: vehicleOperationsReducer,

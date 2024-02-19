@@ -18,6 +18,7 @@ export const AppointmentsModal = (props) => {
     onOk,
     onCancel,
     appointments,
+    setAppointments,
     selectedAppointment,
     setSelectedAppointment,
     bookingStatusesLoading,
@@ -26,23 +27,26 @@ export const AppointmentsModal = (props) => {
     updateBookingSuccess,
   } = props;
 
-  const RenderStatusesSelect = (selectedValue) => {
-    if (bookingStatusesLoading && !bookingStatuses.length) {
-      return null;
+  const [appointmentToUpdate, setAppointmentToUpdate] = React.useState(null);
+  const [updatedStatusId, setUpdatedStatusId] = React.useState(null);
+
+  React.useEffect(() => {
+    if (updateBookingSuccess && appointmentToUpdate && updatedStatusId) {
+      const newList = appointments.map((item) =>
+        item.id === appointmentToUpdate.id
+          ? {
+              ...item,
+              statusId: updatedStatusId,
+            }
+          : item
+      );
+      setAppointments(newList);
     }
+  }, [updateBookingSuccess]);
 
-    return (
-      <Select value={selectedValue}>
-        {bookingStatuses.map((item) => (
-          <Select.Option key={item.id} value={item.id}>
-            {item.name}
-          </Select.Option>
-        ))}
-      </Select>
-    );
-  };
-
-  const handleStatusChange = async (newStatus, appointment) => {
+  const handleStatusChange = async (newStatusId, appointment) => {
+    setAppointmentToUpdate(appointment);
+    setUpdatedStatusId(newStatusId);
     const requestData = {
       ...appointment,
       date: moment(appointment.bookingDate).format("MMM,DD YYYY"),
@@ -51,9 +55,8 @@ export const AppointmentsModal = (props) => {
       vehicleModel: appointment.vehicleModelCode.toString(),
       vehicleModelYear: appointment.vehicleModelYear.toString(),
       vehicleRegNo: appointment.vehicleRegNumber.toString(),
-      statusId: newStatus,
+      statusId: newStatusId,
     };
-    // console.log(requestData);
     await dispatch(updateBooking(navigate, requestData));
   };
 
@@ -119,6 +122,11 @@ export const AppointmentsModal = (props) => {
       dataIndex: "bookingBy",
       key: "bookingBy",
     },
+    // {
+    //   title: "Status",
+    //   dataIndex: "statusId",
+    //   key: "statusId",
+    // },
     {
       title: "Booking Status",
       dataIndex: "statusId",
@@ -126,18 +134,17 @@ export const AppointmentsModal = (props) => {
       fixed: "right",
       width: 200,
       render: (value, row) => {
-        // const [ selectValue, setSelectValue ] = React.useState('');
         return (
           <Select
             style={{ width: "100%" }}
-            defaultValue={value}
+            defaultValue={row.statusId}
+            disabled={row.statusId === 5}
             onChange={(newValue) => handleStatusChange(newValue, row)}
           >
             {bookingStatuses.map((item) => {
               return <Select.Option value={item.id}>{item.name}</Select.Option>;
             })}
           </Select>
-          //   RenderStatusesSelect(value)
         );
       },
     },
@@ -167,11 +174,17 @@ export const AppointmentsModal = (props) => {
   return (
     <>
       <Modal
-        title="Appointments"
+        title="Bookings"
         maskClosable={false}
         open={open}
-        onOk={onOk}
-        onCancel={onCancel}
+        onOk={() => {
+          setAppointments([]);
+          onOk();
+        }}
+        onCancel={() => {
+          setAppointments([]);
+          onCancel();
+        }}
         width={1200}
         cancelButtonProps={{ style: { display: "none" } }}
       >

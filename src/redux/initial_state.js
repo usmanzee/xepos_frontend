@@ -79,6 +79,18 @@ const availableTimeSlotsState = {
 const bookingTransactionsState = {
   loading: false,
   list: [],
+  byMonthAndServiceCenter: {
+    loading: false,
+    list: [],
+  },
+  byMonth: {
+    loading: false,
+    list: [],
+  },
+  byTodayAndServiceCenter: {
+    loading: false,
+    list: [],
+  },
   addLoading: false,
   addSuccess: false,
   addError: false,
@@ -87,7 +99,7 @@ const bookingTransactionsState = {
   updateError: false,
 };
 
-const serviceAdvisorsState = {
+const serviceCenterStaffState = {
   loading: false,
   list: [],
 };
@@ -126,7 +138,7 @@ const initialState = {
   timeSlots: timeSlotsState,
   availableTimeSlots: availableTimeSlotsState,
   bookingTransactions: bookingTransactionsState,
-  serviceAdvisors: serviceAdvisorsState,
+  serviceCenterStaff: serviceCenterStaffState,
   customersByMobile: customersByMobileState,
   staffHolidays: staffHolidaysState,
   vehicleOperations: vehicleOperationsState,

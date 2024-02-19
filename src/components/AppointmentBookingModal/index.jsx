@@ -26,6 +26,7 @@ import {
 import moment from "moment/moment";
 import {
   UAEFormatNumber,
+  getTechniciansTotalAvailableTime,
   twenty4HourTo12Hour,
 } from "../../helpers/helping-functions";
 import { useDispatch, useSelector } from "react-redux";
@@ -51,7 +52,7 @@ const steps = [
     title: "Customer Details",
   },
   {
-    title: "Confirm Appointment",
+    title: "Confirm Booking",
   },
 ];
 
@@ -84,10 +85,9 @@ export const AppointmentBookingModal = (props) => {
     selectedServiceCenter,
     availableSlotsLoading,
     availableSlots,
+    serviceAdvisors,
     vehicleModelsLoading,
     vehicleModels,
-    serviceAdvisorsLoading,
-    serviceAdvisors,
     createBookingLoading,
     createBookingSuccess,
     updateBookingLoading,
@@ -105,6 +105,9 @@ export const AppointmentBookingModal = (props) => {
     vehicleOperations,
     selectedAppointmentOperationIds,
     setSelectedAppointmentOperationIds,
+    serviceTechnicians,
+    staffHolidays,
+    bookingTransactions,
   } = props;
 
   const { loading: customersLoading, list: customers } = useSelector(
@@ -116,6 +119,8 @@ export const AppointmentBookingModal = (props) => {
     React.useState(null);
   const [customerOptions, setCustomerOptions] = React.useState([]);
   const [selectedCustomer, setSelectedCustomer] = React.useState(null);
+  const [tempRemainingHours, setTempRemainingHours] = React.useState(0);
+  const [remainingHours, setRemainingHours] = React.useState(0);
 
   React.useEffect(() => {
     if (bookingStatuses.length) {
@@ -132,6 +137,65 @@ export const AppointmentBookingModal = (props) => {
     });
     setCustomerOptions(options);
   }, [customers]);
+
+  React.useEffect(() => {
+    if (selectedDate && serviceTechnicians.length) {
+      const availableTechnicians = serviceTechnicians.filter((technician) => {
+        return !staffHolidays.find(
+          (holiday) =>
+            holiday.userId === technician.userId &&
+            holiday.date === selectedDate
+        );
+      });
+      const techniciansAvailableTime = getTechniciansTotalAvailableTime(
+        availableTechnicians.length
+      );
+      const transactions = bookingTransactions.filter(
+        (bookingTransaction) => bookingTransaction.bookingDate === selectedDate
+      );
+      let dateBookedHours = 0;
+      for (var transaction of transactions) {
+        let transactionDoneTime = 0;
+        const transactionOperations = transaction.vehicleOperations;
+        transactionDoneTime = transactionOperations.reduce(
+          (accumulator, operationItem) => {
+            return (accumulator += operationItem.timeHours);
+          },
+          0
+        );
+        dateBookedHours += transactionDoneTime;
+      }
+      const remainingHours = techniciansAvailableTime - dateBookedHours;
+      setRemainingHours(remainingHours);
+      setTempRemainingHours(remainingHours);
+    }
+  }, [
+    selectedAppointment,
+    selectedDate,
+    staffHolidays,
+    serviceTechnicians,
+    bookingTransactions,
+  ]);
+
+  const handleOperationValuesSelect = (value) => {
+    if (value) {
+      const operation = vehicleOperations.find((item) => item.id === value);
+      const time = operation
+        ? remainingHours - operation.timeHours
+        : remainingHours - 0;
+      setRemainingHours(time);
+    }
+  };
+
+  const handleOperationValuesDeSelect = (value) => {
+    if (value) {
+      const operation = vehicleOperations.find((item) => item.id === value);
+      const time = operation
+        ? remainingHours + operation.timeHours
+        : remainingHours + 0;
+      setRemainingHours(time);
+    }
+  };
 
   const next = async () => {
     if (currentStep === 0) {
@@ -205,7 +269,6 @@ export const AppointmentBookingModal = (props) => {
 
       await dispatch(updateBooking(navigate, requestData));
     }
-    console.log(requestData);
     setSelectedDate(null);
     setSelectedSlot(null);
     setCurrentStep(0);
@@ -713,86 +776,221 @@ export const AppointmentBookingModal = (props) => {
           </Row>
           <Row>
             <Col span={24}>
-              <Divider>Booking Operations/Status</Divider>
+              <Divider>Booking Operations/Status/Remarks</Divider>
             </Col>
           </Row>
-          <Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <Row>
+                <Col span={24}>
+                  <Form.Item
+                    name="vehicleOperationIds"
+                    label={`Service Operations`}
+                    extra={`Remaining Hours: ${tempRemainingHours} ${
+                      tempRemainingHours > 1 ? "Hrs" : "Hr"
+                    }`}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select Vehicle Service Operations",
+                      },
+                      {
+                        validator: async (rule, values, cb) => {
+                          console.log("values: ", values);
+                          if (values) {
+                            let selectedOperationsTime = 0;
+                            for (const id of values) {
+                              const operation = vehicleOperations.find(
+                                (item) => item.id === id
+                              );
+                              selectedOperationsTime += operation
+                                ? operation.timeHours
+                                : 0;
+                            }
+                            if (selectedOperationsTime > tempRemainingHours) {
+                              return Promise.reject(
+                                new Error("Technicians Available Time Exceeds!")
+                              );
+                            }
+                            return Promise.resolve();
+                          }
+                        },
+                      },
+                    ]}
+                  >
+                    <Select
+                      mode="multiple"
+                      placeholder="Select Vehicle Service Operations"
+                      showSearch
+                      optionFilterProp="children"
+                      // value={formValues.vehicleOperationIds}
+                      // onChange={handleOperationValuesSelect}
+                      onSelect={handleOperationValuesSelect}
+                      onDeselect={handleOperationValuesDeSelect}
+                      filterOption={(input, option) => {
+                        return (
+                          option.children
+                            .toLowerCase()
+                            .indexOf(input.toLowerCase()) >= 0
+                        );
+                      }}
+                      style={{ width: "100%" }}
+                      disabled={
+                        selectedAppointment &&
+                        selectedAppointment.statusId === 5
+                      }
+                    >
+                      {vehicleOperations.map((operation) => {
+                        return (
+                          <Select.Option value={operation.id}>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <Text>{operation.name}</Text>
+                              <Text type="secondary" italic>
+                                {`${operation.timeHours} Hours`}
+                              </Text>
+                            </div>
+                          </Select.Option>
+                        );
+                      })}
+                    </Select>
+                    {/* <Text type="secondary" italic style={{ fontSize: "12px" }}>
+                      Available Hours: {remainingHours} Hr(s)
+                    </Text> */}
+                  </Form.Item>
+                  {/* <Form.Item
+                    name="vehicleOperationIds"
+                    label="Service Operations"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select Vehicle Service Operations",
+                      },
+                    ]}
+                    // rules={[
+                    //   {
+                    //     required: true,
+                    //     message: "Please select Vehicle Service Operations",
+                    //   },
+
+                    //   // {
+                    //   //   validator: async (rule, value, cb) => {
+                    //   //     // if (data && data.data.isAvailable) {
+                    //   //     //     return Promise.resolve();
+                    //   //     // }
+                    //   //     console.log("value: ", rule, value, cb);
+
+                    //   //     return Promise.reject(
+                    //   //       new Error("'title' is must be unique")
+                    //   //     );
+                    //   //   },
+                    //   // },
+                    // ]}
+                    // validateStatus="error"
+                  >
+                    <Select
+                      mode="multiple"
+                      placeholder="Select Vehicle Service Operations"
+                      showSearch
+                      optionFilterProp="children"
+                      // value={formValues.vehicleOperationIds}
+                      // onChange={handleOperationValuesSelect}
+                      filterOption={(input, option) => {
+                        return (
+                          option.children
+                            .toLowerCase()
+                            .indexOf(input.toLowerCase()) >= 0
+                        );
+                      }}
+                      style={{ width: "100%" }}
+                      disabled={
+                        selectedAppointment &&
+                        selectedAppointment.statusId === 5
+                      }
+                    >
+                      {vehicleOperations.map((operation) => {
+                        return (
+                          <Select.Option value={operation.id}>
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <Text>{operation.name}</Text>
+                              <Text type="secondary" italic>
+                                {`${operation.timeHours} Hours`}
+                              </Text>
+                            </div>
+                          </Select.Option>
+                        );
+                      })}
+                    </Select>
+                    <Text type="secondary" italic style={{ fontSize: "12px" }}>
+                      Available Hours: {remainingHours} Hr(s)
+                    </Text>
+                  </Form.Item> */}
+                </Col>
+              </Row>
+              <Row>
+                <Col span={24}>
+                  <Form.Item
+                    name="statusId"
+                    label="Booking Status"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please select Booking Status",
+                      },
+                    ]}
+                  >
+                    <Select
+                      placeholder="Select Booking Status"
+                      style={{ width: "100%" }}
+                      disabled={
+                        selectedAppointment &&
+                        selectedAppointment.statusId === 5
+                      }
+                      onChange={(value) => {
+                        const status = bookingStatuses.find(
+                          (item) => item.id === value
+                        );
+                        setSelectedBookingStatus(status);
+                      }}
+                    >
+                      {bookingStatuses.map((bookingStatus) => {
+                        return (
+                          <Select.Option value={bookingStatus.id}>
+                            {bookingStatus.name}
+                          </Select.Option>
+                        );
+                      })}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Col>
             <Col span={12}>
               <Form.Item
-                name="vehicleOperationIds"
-                label="Operations"
+                label="Remarks"
+                name="remarks"
+                type="text"
                 rules={[
                   {
                     required: false,
-                    message: "Please select Vehicle Operations",
+                    message: "Please input Remarks!",
                   },
                 ]}
               >
-                <Select
-                  mode="multiple"
-                  placeholder="Select Vehicle Operations"
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={(input, option) => {
-                    return (
-                      option.children
-                        .toLowerCase()
-                        .indexOf(input.toLowerCase()) >= 0
-                    );
-                  }}
-                  style={{ width: "100%" }}
-                >
-                  {vehicleOperations.map((operation) => {
-                    return (
-                      <Select.Option value={operation.id}>
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Text>{operation.name}</Text>
-                          <Text type="secondary" italic>
-                            {`${operation.timeHours} Hours`}
-                          </Text>
-                        </div>
-                      </Select.Option>
-                    );
-                  })}
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-          <Row>
-            <Col span={12}>
-              <Form.Item
-                name="statusId"
-                label="Booking Status"
-                rules={[
-                  {
-                    required: true,
-                    message: "Please select Booking Status",
-                  },
-                ]}
-              >
-                <Select
-                  placeholder="Select Booking Status"
-                  style={{ width: "100%" }}
-                  onChange={(value) => {
-                    const status = bookingStatuses.find(
-                      (item) => item.id === value
-                    );
-                    setSelectedBookingStatus(status);
-                  }}
-                >
-                  {bookingStatuses.map((bookingStatus) => {
-                    return (
-                      <Select.Option value={bookingStatus.id}>
-                        {bookingStatus.name}
-                      </Select.Option>
-                    );
-                  })}
-                </Select>
+                <Input.TextArea
+                  placeholder="Enter Remarks"
+                  autoSize={{ minRows: 6, maxRows: 5 }}
+                  showCount={true}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -924,7 +1122,7 @@ export const AppointmentBookingModal = (props) => {
   return (
     <>
       <Modal
-        title={isEditing ? "Update Appointment" : "Book New Appointment"}
+        title={isEditing ? "Update Booking" : "Book New Booking"}
         maskClosable={false}
         open={open}
         onOk={onOk}

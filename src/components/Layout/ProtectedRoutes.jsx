@@ -45,7 +45,7 @@ const ProtectedRoutes = ({ auth, profileLoading, profile }) => {
       <Layout>
         <AppHeader />
         <Spin tip="Loading..." spinning={spinning}>
-          <Content style={{ margin: "16px 16px 0", overflow: "initial" }}>
+          <Content style={{ margin: "8px 8px 0", overflow: "initial" }}>
             <div
               style={{
                 height: "100%",

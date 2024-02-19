@@ -288,28 +288,28 @@ export const getAvailableSlotsFetch =
       });
     }
   };
-export const getServiceAdvisors =
+export const getServiceStaff =
   (navigate, serviceCenterCode) => async (dispatch) => {
     try {
       dispatch({
-        type: types.SERVICE_ADVISORS_FETCH,
+        type: types.SERVICE_CENTER_STAFF_FETCH,
       });
       const config = {
         apiVersion: "baseUrl",
         headers: { Authorization: "Bearer " + getToken() },
       };
       const response = await API.get(config)(
-        `/api/servicecenter/service-advisor?serviceCenterCode=${serviceCenterCode}`
+        `/api/servicecenter/staff?serviceCenterCode=${serviceCenterCode}`
       );
       const data = response.data;
       dispatch({
-        type: types.SERVICE_ADVISORS_DATA,
+        type: types.SERVICE_CENTER_STAFF_DATA,
         payload: data,
       });
     } catch (error) {
       handleError(error, navigate, dispatch);
       dispatch({
-        type: types.SERVICE_ADVISORS_ERROR,
+        type: types.SERVICE_CENTER_STAFF_ERROR,
       });
     }
   };

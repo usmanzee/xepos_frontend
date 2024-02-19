@@ -5,8 +5,69 @@ import { getToken } from "../../utils/common";
 
 import { handleError } from "../actions";
 
+export const getBookingTransactionsByDateAndServiceCenter =
+  (navigate, date, serviceCenterCode, isUpdate = false) =>
+  async (dispatch) => {
+    try {
+      if (!isUpdate) {
+        dispatch({
+          type: types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_FETCH,
+        });
+      }
+      const config = {
+        apiVersion: "baseUrl",
+        headers: { Authorization: "Bearer " + getToken() },
+      };
+      const url = `/api/bookingtransaction/by-date-servicecenter?date=${date}&serviceCenterCode=${serviceCenterCode}`;
+
+      const response = await API.get(config)(url);
+      const data = response.data;
+      dispatch({
+        type: types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_DATA,
+        payload: data.length ? data : [],
+      });
+    } catch (error) {
+      if (!isUpdate) {
+        handleError(error, navigate, dispatch);
+        dispatch({
+          type: types.BOOKING_TRANSACTIONS_BY_TODAY_SERVICE_CENTER_ERROR,
+        });
+      }
+    }
+  };
+
 export const getBookingTransactions =
-  (navigate, date, serviceCenterCode) => async (dispatch) => {
+  (navigate, date, serviceCenterCode, isUpdate = false) =>
+  async (dispatch) => {
+    try {
+      if (!isUpdate) {
+        dispatch({
+          type: types.BOOKING_TRANSACTIONS_FETCH,
+        });
+      }
+      const config = {
+        apiVersion: "baseUrl",
+        headers: { Authorization: "Bearer " + getToken() },
+      };
+      const url = `/api/bookingtransaction/by-month-servicecenter?date=${date}&serviceCenterCode=${serviceCenterCode}`;
+
+      const response = await API.get(config)(url);
+      const data = response.data;
+      dispatch({
+        type: types.BOOKING_TRANSACTIONS_DATA,
+        payload: data,
+      });
+    } catch (error) {
+      if (!isUpdate) {
+        handleError(error, navigate, dispatch);
+        dispatch({
+          type: types.BOOKING_TRANSACTIONS_ERROR,
+        });
+      }
+    }
+  };
+export const getBookingTransactionsByMonth =
+  (navigate, date) => async (dispatch) => {
     try {
       dispatch({
         type: types.BOOKING_TRANSACTIONS_FETCH,
@@ -15,7 +76,7 @@ export const getBookingTransactions =
         apiVersion: "baseUrl",
         headers: { Authorization: "Bearer " + getToken() },
       };
-      const url = `/api/bookingtransaction/by-date-servicecenter?date=${date}&serviceCenterCode=${serviceCenterCode}`;
+      const url = `/api/bookingtransaction/by-month?date=${date}`;
 
       const response = await API.get(config)(url);
       const data = response.data;

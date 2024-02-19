@@ -1,20 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import moment from "moment";
 import dayjs from "dayjs";
 
 import {
   Row,
   Col,
-  Form,
-  Button,
   Select,
-  Divider,
   Table,
-  message,
   Spin,
   Card,
-  Popconfirm,
-  Tag,
   DatePicker,
   theme,
   Checkbox,
@@ -28,7 +22,6 @@ import {
   getStaffHolidatByMonthAndServiceCenter,
   createDeleteHoliday,
 } from "../../redux/actions";
-import { PageLoader } from "../../components";
 import {
   getAllDaysInMonth,
   getDaysInWeek,
@@ -39,7 +32,7 @@ const StaffManagement = () => {
   const dateMonthFormat = "YYYY-MM";
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { token } = theme.useToken();
+  const dayRef = React.useRef(null);
 
   const { loading: profileLoading, data: profile } = useSelector(
     (state) => state.profile
@@ -47,7 +40,6 @@ const StaffManagement = () => {
   const { loading: usersLoading, list: users } = useSelector(
     (state) => state.users
   );
-
   const { loading: staffHolidaysLoading, list: staffHolidays } = useSelector(
     (state) => state.staffHolidays.byMonthAndServiceCenter
   );
@@ -59,7 +51,6 @@ const StaffManagement = () => {
   const [serviceAdvisors, setServiceAdvisors] = React.useState([]);
   const [selectedServiceCenter, setSelectedServiceCenter] =
     React.useState(null);
-
   const [monthDates, setMonthDates] = React.useState([]);
   const [tableData, setTableData] = React.useState([]);
   const [monthDatesColumns, setMonthDatesColumns] = React.useState([]);
@@ -164,6 +155,9 @@ const StaffManagement = () => {
     renderColumnsCallback(selectedServiceCenter, monthDates);
   }, [selectedServiceCenter, monthDates]);
 
+  const sorter = (a, b) =>
+    isNaN(a) && isNaN(b) ? (a || "").localeCompare(b || "") : a - b;
+
   const renderColumnsCallback = React.useCallback(() => {
     if (selectedServiceCenter && monthDates.length) {
       setMonthDatesColumns([
@@ -180,12 +174,35 @@ const StaffManagement = () => {
           key: "roleName",
           fixed: "left",
           width: 170,
+          defaultSortOrder: "descend",
+          sortDirections: ["descend", "ascend"],
+          sorter: (a, b) => a.roleName.localeCompare(b.roleName),
         },
       ]);
       const columns = monthDates.map((date, index) => {
+        const currentMonth = moment().month() + 1;
+        const currentYear = moment().year();
+        let divRef = null;
+        if (
+          moment().date() - 5 === new Date(date.key).getDate() &&
+          currentMonth === selectedMonth &&
+          currentYear === selectedYear
+        ) {
+          divRef = dayRef;
+        } else if (
+          (currentMonth !== selectedMonth || currentYear !== selectedYear) &&
+          index === 0
+        ) {
+          divRef = dayRef;
+        }
         return {
           title: () => {
-            return <div>{`${date.value} (${date.dayName})`}</div>;
+            return (
+              <div
+                ref={divRef}
+                style={{ cursor: "pointer" }}
+              >{`${date.value} (${date.dayName})`}</div>
+            );
           },
           dataIndex: date.key,
           key: date.key,
@@ -225,6 +242,16 @@ const StaffManagement = () => {
       setMonthDatesColumns((prev) => [...prev, ...columns]);
     }
   }, [selectedServiceCenter, monthDates]);
+
+  React.useEffect(() => {
+    if (monthDatesColumns.length && dayRef.current) {
+      dayRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+        inline: "start",
+      });
+    }
+  }, [monthDatesColumns]);
 
   const handleChangeCheckBox = (newValue, requestObj) => {
     requestObj["isDelete"] = newValue ? true : false;
@@ -310,15 +337,7 @@ const StaffManagement = () => {
               pagination={false}
               rowKey="user_id"
               scroll={{ x: "fit-content" }}
-              loading={{
-                indicator: (
-                  <div>
-                    <Spin />
-                  </div>
-                ),
-                spinning:
-                  profileLoading && usersLoading && staffHolidaysLoading,
-              }}
+              loading={profileLoading || usersLoading || staffHolidaysLoading}
             />
           </Col>
         </Row>

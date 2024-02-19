@@ -19,6 +19,7 @@ import EditUser from "../../Pages/users/edit_user";
 import ServiceCenters from "../../Pages/service_centers";
 import VehicleModels from "../../Pages/vehicle_models";
 import StaffManagement from "../../Pages/saff_management";
+import Services from "../../Pages/services";
 
 export const Main = ({ children }) => {
   const dispatch = useDispatch();
@@ -74,6 +75,7 @@ export const Main = ({ children }) => {
         <Route path="staff-management" element={<StaffManagement />} />
         <Route path="users/edit/:id" element={<EditUser />} />
         <Route path="bookings" element={<Bookings />} />
+        <Route path="services" element={<Services />} />
       </Route>
     </Routes>
   );

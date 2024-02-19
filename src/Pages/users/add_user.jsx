@@ -44,8 +44,9 @@ const AddUser = () => {
   const { loading: serviceCentersLoading, list: serviceCenters } = useSelector(
     (state) => state.serviceCenters
   );
-
   const addUserLoading = useSelector((state) => state.users.addUserLoading);
+
+  const [filterEmployees, setFilterEmployees] = useState([]);
 
   useEffect(() => {
     dispatch(getUsersAction(navigate, true));
@@ -53,6 +54,15 @@ const AddUser = () => {
     dispatch(getRolesAction(navigate));
     dispatch(getServiceCentersFetch(navigate));
   }, []);
+
+  useEffect(() => {
+    if (employees.length) {
+      const filterEmployees = employees.filter((employee) => {
+        return !users.find((user) => user.employeeId === employee.employeeId);
+      });
+      setFilterEmployees(filterEmployees);
+    }
+  }, [employees, users]);
 
   const handleSubmitClick = () => {
     form.submit();
@@ -194,7 +204,7 @@ const AddUser = () => {
                               );
                             }}
                           >
-                            {employees.map((employee) => {
+                            {filterEmployees.map((employee) => {
                               return (
                                 <Select.Option value={employee.employeeId}>
                                   {`${employee.employeeId} - ${employee.name}`}

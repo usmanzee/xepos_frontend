@@ -44,7 +44,7 @@ export const AppSidebar = (props) => {
       >
         {profileLoading
           ? renderMenuLoading()
-          : pgRoutes(profile).map(renderNavItems())}
+          : pgRoutes(profile && profile.roleId).map(renderNavItems())}
         <Divider style={{ margin: "16px 0px" }} />
       </Menu>
     </>
