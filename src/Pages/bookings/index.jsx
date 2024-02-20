@@ -256,8 +256,8 @@ const BookAppointment = () => {
     var operationMinHours = Math.min(
       ...vehicleOperations.map((item) => item.timeHours)
     );
-    // const allDatesInMonth = getAllDaysInMonth(selectedMonth, selectedYear);
-    const allDatesInMonth = getDaysInWeek(new Date());
+    const allDatesInMonth = getAllDaysInMonth(selectedMonth, selectedYear);
+    // const allDatesInMonth = getDaysInWeek(new Date());
     const formatedDatesInMonth = allDatesInMonth.map((date) => {
       const dateKey = `${padTo2Digits(date.getFullYear())}-${padTo2Digits(
         date.getMonth() + 1
