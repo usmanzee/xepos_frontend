@@ -107,6 +107,7 @@ const BookAppointment = () => {
   const [selectedMonth, setSelectedMonth] = React.useState(
     moment().month() + 1
   );
+  const [loadingMonthsDates, setLoadingMonthsDates] = React.useState(true);
   const [selectedServiceCenter, setSelectedServiceCenter] =
     React.useState(null);
   const [appointmentBookingModalOpen, setAppointmentBookingModalOpen] =
@@ -245,6 +246,7 @@ const BookAppointment = () => {
   }, [timeSlots]);
 
   React.useEffect(() => {
+    setLoadingMonthsDates(true);
     const operationTotalHours = vehicleOperations.reduce(
       (accumulator, operationItem) => {
         return (accumulator += operationItem.timeHours);
@@ -326,6 +328,7 @@ const BookAppointment = () => {
       };
     });
     setMonthDates(formatedDatesInMonth);
+    setLoadingMonthsDates(false);
   }, [
     selectedMonth,
     selectedYear,
@@ -577,6 +580,7 @@ const BookAppointment = () => {
             return vehicleOperation.operationId;
           }
         );
+      console.log("selectedOperationIds: ", selectedOperationIds);
       setSelectedAppointmentOperationIds(selectedOperationIds);
       updateFormValues["vehicleOperationIds"] = selectedOperationIds;
       customerForm.setFieldsValue(updateFormValues);
@@ -798,6 +802,7 @@ const BookAppointment = () => {
         setFormValues={setCustomerFormValues}
         isEditing={isEditing}
         selectedAppointment={selectedAppointmentToUpdate}
+        setSelectedAppointment={setSelectedAppointmentToUpdate}
         bookingStatusesLoading={bookingStatusesLoading}
         bookingStatuses={bookingStatuses}
         vehicleOperationsLoading={vehicleOperationsLoading}

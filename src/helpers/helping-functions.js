@@ -84,7 +84,7 @@ export const twenty4HourTo12Hour = (value) => {
 export const getTechniciansTotalAvailableTime = (numberOfTechnicians) => {
   const percentage = 85;
   const technicianWorkingHours = 10;
-  return Math.round(
+  return Math.floor(
     (percentage / 100) * (numberOfTechnicians * technicianWorkingHours)
   );
 };

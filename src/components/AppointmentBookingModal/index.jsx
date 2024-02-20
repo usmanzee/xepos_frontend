@@ -99,6 +99,7 @@ export const AppointmentBookingModal = (props) => {
     setFormValues,
     isEditing,
     selectedAppointment,
+    setSelectedAppointment,
     bookingStatusesLoading,
     bookingStatuses,
     vehicleOperationsLoading,
@@ -119,8 +120,8 @@ export const AppointmentBookingModal = (props) => {
     React.useState(null);
   const [customerOptions, setCustomerOptions] = React.useState([]);
   const [selectedCustomer, setSelectedCustomer] = React.useState(null);
-  const [tempRemainingHours, setTempRemainingHours] = React.useState(0);
   const [remainingHours, setRemainingHours] = React.useState(0);
+  const [selectedHours, setSelectedHours] = React.useState(0);
 
   React.useEffect(() => {
     if (bookingStatuses.length) {
@@ -167,33 +168,49 @@ export const AppointmentBookingModal = (props) => {
       }
       const remainingHours = techniciansAvailableTime - dateBookedHours;
       setRemainingHours(remainingHours);
-      setTempRemainingHours(remainingHours);
     }
-  }, [
-    selectedAppointment,
-    selectedDate,
-    staffHolidays,
-    serviceTechnicians,
-    bookingTransactions,
-  ]);
+  }, [selectedDate, staffHolidays, serviceTechnicians, bookingTransactions]);
+
+  React.useEffect(() => {
+    console.log("setSelectedHours");
+    setSelectedHours(0);
+
+    if (
+      selectedAppointment &&
+      selectedAppointment.vehicleOperations &&
+      selectedAppointment.vehicleOperations.length
+    ) {
+      console.log("setSelectedHours IF");
+
+      const selectedHours = selectedAppointment.vehicleOperations.reduce(
+        (accumulator, item) => {
+          return (accumulator += item.timeHours);
+        },
+        0
+      );
+      setSelectedHours(selectedHours);
+    }
+  }, [selectedAppointment]);
 
   const handleOperationValuesSelect = (value) => {
     if (value) {
       const operation = vehicleOperations.find((item) => item.id === value);
-      const time = operation
-        ? remainingHours - operation.timeHours
-        : remainingHours - 0;
-      setRemainingHours(time);
+      const operationHours = operation ? operation.timeHours : 0;
+      setRemainingHours((prev) => prev - operationHours);
+      if (selectedAppointment) {
+        setSelectedHours((prev) => prev + operationHours);
+      }
     }
   };
 
   const handleOperationValuesDeSelect = (value) => {
     if (value) {
       const operation = vehicleOperations.find((item) => item.id === value);
-      const time = operation
-        ? remainingHours + operation.timeHours
-        : remainingHours + 0;
-      setRemainingHours(time);
+      const operationHours = operation ? operation.timeHours : 0;
+      setRemainingHours((prev) => prev + operationHours);
+      if (selectedAppointment) {
+        setSelectedHours((prev) => prev - operationHours);
+      }
     }
   };
 
@@ -271,6 +288,13 @@ export const AppointmentBookingModal = (props) => {
     }
     setSelectedDate(null);
     setSelectedSlot(null);
+
+    setSelectedAppointment(null);
+    setSelectedVehicleModel(null);
+    if (bookingStatuses.length) {
+      setSelectedBookingStatus(bookingStatuses[0]);
+    }
+
     setCurrentStep(0);
     form.resetFields();
     onOk();
@@ -786,8 +810,8 @@ export const AppointmentBookingModal = (props) => {
                   <Form.Item
                     name="vehicleOperationIds"
                     label={`Service Operations`}
-                    extra={`Remaining Hours: ${tempRemainingHours} ${
-                      tempRemainingHours > 1 ? "Hrs" : "Hr"
+                    extra={`Remaining Hours: ${remainingHours} ${
+                      remainingHours === 1 ? "Hr" : "Hrs"
                     }`}
                     rules={[
                       {
@@ -796,7 +820,6 @@ export const AppointmentBookingModal = (props) => {
                       },
                       {
                         validator: async (rule, values, cb) => {
-                          console.log("values: ", values);
                           if (values) {
                             let selectedOperationsTime = 0;
                             for (const id of values) {
@@ -807,7 +830,11 @@ export const AppointmentBookingModal = (props) => {
                                 ? operation.timeHours
                                 : 0;
                             }
-                            if (selectedOperationsTime > tempRemainingHours) {
+                            if (
+                              // selectedOperationsTime >
+                              // remainingHours + selectedHours
+                              remainingHours < 0
+                            ) {
                               return Promise.reject(
                                 new Error("Technicians Available Time Exceeds!")
                               );
@@ -858,9 +885,6 @@ export const AppointmentBookingModal = (props) => {
                         );
                       })}
                     </Select>
-                    {/* <Text type="secondary" italic style={{ fontSize: "12px" }}>
-                      Available Hours: {remainingHours} Hr(s)
-                    </Text> */}
                   </Form.Item>
                   {/* <Form.Item
                     name="vehicleOperationIds"
@@ -1127,6 +1151,9 @@ export const AppointmentBookingModal = (props) => {
         open={open}
         onOk={onOk}
         onCancel={() => {
+          setSelectedDate(null);
+          setSelectedSlot(null);
+          setSelectedAppointment(null);
           setSelectedVehicleModel(null);
           if (bookingStatuses.length) {
             setSelectedBookingStatus(bookingStatuses[0]);
