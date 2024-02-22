@@ -130,12 +130,12 @@ const ServiceCenters = () => {
       key: "name",
       editable: true,
     },
-    {
-      title: "Capacity",
-      dataIndex: "slotCapacity",
-      key: "slotCapacity",
-      editable: true,
-    },
+    // {
+    //   title: "Capacity",
+    //   dataIndex: "slotCapacity",
+    //   key: "slotCapacity",
+    //   editable: true,
+    // },
     {
       title: "Operation",
       dataIndex: "operation",
