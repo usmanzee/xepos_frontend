@@ -85,7 +85,7 @@ export const AppHeader = () => {
         </Row>
 
         <Drawer
-          title="Booking App"
+          title="XEPOS ADMIN"
           placement="left"
           onClick={() => setVisible(false)}
           onClose={() => setVisible(false)}

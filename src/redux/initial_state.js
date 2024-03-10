@@ -19,6 +19,41 @@ const profileState = {
   data: null,
 };
 
+const companiesState = {
+  allLoading: false,
+  allList: [],
+  loading: false,
+  list: [],
+  pagination: {},
+  detailLoading: false,
+  detail: null,
+  addLoading: false,
+  addSuccess: false,
+  addError: false,
+  updateLoading: false,
+  updateSuccess: false,
+  updateError: false,
+  deleteLoading: false,
+  deleteSuccess: false,
+  deleteError: false,
+};
+const employeesState = {
+  loading: false,
+  list: [],
+  pagination: {},
+  detailLoading: false,
+  detail: null,
+  addLoading: false,
+  addSuccess: false,
+  addError: false,
+  updateLoading: false,
+  updateSuccess: false,
+  updateError: false,
+  deleteLoading: false,
+  deleteSuccess: false,
+  deleteError: false,
+};
+
 const usersState = {
   loading: false,
   list: [],
@@ -33,11 +68,6 @@ const usersState = {
 };
 
 const rolesState = {
-  loading: false,
-  list: [],
-};
-
-const employeesState = {
   loading: false,
   list: [],
 };
@@ -128,6 +158,7 @@ const initialState = {
   screenLoader: screenLoaderState,
   login: loginState,
   profile: profileState,
+  companies: companiesState,
   users: usersState,
   roles: rolesState,
   employees: employeesState,

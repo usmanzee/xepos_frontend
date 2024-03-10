@@ -1,6 +1,5 @@
-import { Row, Col, Layout, Divider, Typography, Avatar, Spin } from "antd";
+import { Row, Col, Layout, Divider, Typography, Spin } from "antd";
 import { Navigate, Outlet } from "react-router-dom";
-import aliSonsLogo from "../../assets/images/ali_sons_plain_logo.png";
 import { AppSidebar, AppFooter, AppHeader } from "../../components";
 import { useSelector } from "react-redux";
 
@@ -31,11 +30,8 @@ const ProtectedRoutes = ({ auth, profileLoading, profile }) => {
           justify="center"
         >
           <Col>
-            <Avatar size={45} shape="square" src={aliSonsLogo} />
-          </Col>
-          <Col>
-            <Title level={5} style={{ marginTop: "12px", marginLeft: "5px" }}>
-              Booking App
+            <Title level={5} style={{ marginTop: "12px" }}>
+              XEPOS ADMIN
             </Title>
           </Col>
         </Row>
@@ -59,7 +55,7 @@ const ProtectedRoutes = ({ auth, profileLoading, profile }) => {
       </Layout>
     </Layout>
   ) : (
-    <Navigate to="/unauthorized" replace />
+    <Navigate to="/login" replace />
   );
 };
 export default ProtectedRoutes;

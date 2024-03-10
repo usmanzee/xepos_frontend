@@ -42,10 +42,11 @@ export const AppSidebar = (props) => {
         mode="inline"
         defaultSelectedKeys={[`${location.pathname}`]}
       >
-        {profileLoading
+        {/* {profileLoading
           ? renderMenuLoading()
           : pgRoutes(profile && profile.roleId).map(renderNavItems())}
-        <Divider style={{ margin: "16px 0px" }} />
+        <Divider style={{ margin: "16px 0px" }} /> */}
+        {pgRoutes(profile && profile.roleId).map(renderNavItems())}
       </Menu>
     </>
   );

@@ -16,17 +16,15 @@ import { message } from "antd";
  */
 
 export * from "./AuthActions.js";
+export * from "./company_actions";
+export * from "./employee_actions";
 export * from "./UserActions.js";
-export * from "./BookingTransactionActions";
-export * from "./CustomerActions";
-export * from "./StaffHolidayActions";
 
 export const handleError = (error, navigate, dispatch) => {
   if (error.code === 401) {
     removeToken();
     removeAuthToken();
-    navigate("/unauthorized");
-    // navigate("/login");
+    navigate("/login");
   }
   message.error(error.message ? error.message : "Something went wrong.");
 };
@@ -64,28 +62,6 @@ export const getRolesAction = (navigate) => async (dispatch) => {
     handleError(error, navigate, dispatch);
     dispatch({
       type: types.ROLES_ERROR,
-    });
-  }
-};
-export const getEmployeesAction = (navigate) => async (dispatch) => {
-  try {
-    dispatch({
-      type: types.EMPLOYEES_FETCH,
-    });
-    const config = {
-      apiVersion: "baseUrl",
-      headers: { Authorization: "Bearer " + getToken() },
-    };
-    const response = await API.get(config)("/api/employee/all");
-    const data = response.data;
-    dispatch({
-      type: types.EMPLOYEES_DATA,
-      payload: data,
-    });
-  } catch (error) {
-    handleError(error, navigate, dispatch);
-    dispatch({
-      type: types.EMPLOYEES_ERROR,
     });
   }
 };
@@ -128,7 +104,7 @@ export const updateServiceCenter =
       };
       const response = await API.post(config)(
         "/api/servicecenter/create-update",
-        requestData
+        requestData,
       );
       dispatch({
         type: types.UPDATE_SERVICE_CENTER_SUCCESS,
@@ -153,7 +129,7 @@ export const getUserServiceCentersAction = (navigate) => async (dispatch) => {
       headers: { Authorization: "Bearer " + getToken() },
     };
     const response = await API.get(config)(
-      "/api/servicecenter/user_service_centers"
+      "/api/servicecenter/user_service_centers",
     );
     const data = response.data;
     dispatch({
@@ -205,7 +181,7 @@ export const updateVehicleModel =
       };
       const response = await API.post(config)(
         "/api/vehiclemodel/create-update",
-        requestData
+        requestData,
       );
       dispatch({
         type: types.UPDATE_VEHICLE_MODEL_SUCCESS,
@@ -274,7 +250,7 @@ export const getAvailableSlotsFetch =
         headers: { Authorization: "Bearer " + getToken() },
       };
       const response = await API.get(config)(
-        `/api/timeslot/available?date=${date}&location=${serviceCenterCode}`
+        `/api/timeslot/available?date=${date}&location=${serviceCenterCode}`,
       );
       const data = response.data;
       dispatch({
@@ -299,7 +275,7 @@ export const getServiceStaff =
         headers: { Authorization: "Bearer " + getToken() },
       };
       const response = await API.get(config)(
-        `/api/servicecenter/staff?serviceCenterCode=${serviceCenterCode}`
+        `/api/servicecenter/staff?serviceCenterCode=${serviceCenterCode}`,
       );
       const data = response.data;
       dispatch({

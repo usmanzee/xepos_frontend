@@ -114,6 +114,234 @@ const profileReducer = (state = initialState.profile, action) => {
   }
 };
 
+const companiesReducer = (state = initialState.companies, action) => {
+  switch (action.type) {
+    case types.ALL_COMPANIES_FETCH:
+      return {
+        ...state,
+        allLoading: true,
+      };
+    case types.ALL_COMPANIES_DATA:
+      return {
+        ...state,
+        allLoading: false,
+        allList: action.payload,
+      };
+    case types.ALL_COMPANIES_ERROR:
+      return {
+        ...state,
+        allLoading: false,
+      };
+    case types.COMPANIES_FETCH:
+      return {
+        ...state,
+        loading: true,
+      };
+    case types.COMPANIES_DATA:
+      return {
+        ...state,
+        loading: false,
+        list: action.payload.data,
+        pagination: {
+          current: action.payload.meta.current_page,
+          pageSize: action.payload.meta.per_page,
+          total: action.payload.meta.total,
+        },
+      };
+    case types.COMPANIES_ERROR:
+      return {
+        ...state,
+        loading: false,
+      };
+    case types.ADD_COMPANY_FETCH:
+      return {
+        ...state,
+        addLoading: true,
+        addSuccess: false,
+      };
+    case types.ADD_COMPANY_SUCCESS:
+      return {
+        ...state,
+        addLoading: false,
+        addSuccess: true,
+        list: [action.payload, ...state.list],
+        pagination: {
+          ...state.pagination,
+          // current: state.pagination.current + 1,
+          total: state.pagination.total + 1,
+        },
+      };
+    case types.ADD_COMPANY_ERROR:
+      return {
+        ...state,
+        addLoading: false,
+        addSuccess: false,
+        addError: false,
+      };
+    case types.UPDATE_COMPANY_FETCH:
+      return {
+        ...state,
+        updateLoading: true,
+        updateSuccess: false,
+      };
+    case types.UPDATE_COMPANY_SUCCESS:
+      const index = state.list.findIndex(
+        (item) => item.id === action.payload.id,
+      );
+      let companiesList = [...state.list];
+      companiesList[index] = action.payload;
+
+      return {
+        ...state,
+        updateLoading: false,
+        updateSuccess: true,
+        list: companiesList,
+      };
+
+    case types.UPDATE_COMPANY_ERROR:
+      return {
+        ...state,
+        updateLoading: false,
+        updateError: false,
+        updateSuccess: false,
+      };
+    case types.DELETE_COMPANY_FETCH:
+      return {
+        ...state,
+        deleteLoading: true,
+        deleteSuccess: false,
+      };
+    case types.DELETE_COMPANY_SUCCESS:
+      return {
+        ...state,
+        deleteLoading: false,
+        deleteSuccess: true,
+        list: state.list.filter((item) => item.id !== action.payload),
+        pagination: {
+          ...state.pagination,
+          // current: state.pagination.current + 1,
+          total: state.pagination.total - 1,
+        },
+      };
+
+    case types.DELETE_COMPANY_ERROR:
+      return {
+        ...state,
+        deleteLoading: false,
+        deleteError: false,
+        deleteSuccess: false,
+      };
+    default:
+      return state;
+  }
+};
+
+const employeesReducer = (state = initialState.employees, action) => {
+  switch (action.type) {
+    case types.EMPLOYEES_FETCH:
+      return {
+        ...state,
+        loading: true,
+      };
+    case types.EMPLOYEES_DATA:
+      return {
+        ...state,
+        loading: false,
+        list: action.payload.data,
+        pagination: {
+          current: action.payload.meta.current_page,
+          pageSize: action.payload.meta.per_page,
+          total: action.payload.meta.total,
+        },
+      };
+    case types.EMPLOYEES_ERROR:
+      return {
+        ...state,
+        loading: false,
+      };
+    case types.ADD_EMPLOYEE_FETCH:
+      return {
+        ...state,
+        addLoading: true,
+        addSuccess: false,
+      };
+    case types.ADD_EMPLOYEE_SUCCESS:
+      return {
+        ...state,
+        addLoading: false,
+        addSuccess: true,
+        list: [action.payload, ...state.list],
+        pagination: {
+          ...state.pagination,
+          // current: state.pagination.current + 1,
+          total: state.pagination.total + 1,
+        },
+      };
+    case types.ADD_EMPLOYEE_ERROR:
+      return {
+        ...state,
+        addLoading: false,
+        addSuccess: false,
+        addError: false,
+      };
+    case types.UPDATE_EMPLOYEE_FETCH:
+      return {
+        ...state,
+        updateLoading: true,
+        updateSuccess: false,
+      };
+    case types.UPDATE_EMPLOYEE_SUCCESS:
+      const index = state.list.findIndex(
+        (item) => item.id === action.payload.id,
+      );
+      let companiesList = [...state.list];
+      companiesList[index] = action.payload;
+
+      return {
+        ...state,
+        updateLoading: false,
+        updateSuccess: true,
+        list: companiesList,
+      };
+
+    case types.UPDATE_EMPLOYEE_ERROR:
+      return {
+        ...state,
+        updateLoading: false,
+        updateError: false,
+        updateSuccess: false,
+      };
+    case types.DELETE_EMPLOYEE_FETCH:
+      return {
+        ...state,
+        deleteLoading: true,
+        deleteSuccess: false,
+      };
+    case types.DELETE_EMPLOYEE_SUCCESS:
+      return {
+        ...state,
+        deleteLoading: false,
+        deleteSuccess: true,
+        list: state.list.filter((item) => item.id !== action.payload),
+        pagination: {
+          ...state.pagination,
+          // current: state.pagination.current + 1,
+          total: state.pagination.total - 1,
+        },
+      };
+
+    case types.DELETE_EMPLOYEE_ERROR:
+      return {
+        ...state,
+        deleteLoading: false,
+        deleteError: false,
+        deleteSuccess: false,
+      };
+    default:
+      return state;
+  }
+};
+
 const usersReducer = (state = initialState.users, action) => {
   switch (action.type) {
     case types.USERS_FETCH:
@@ -212,28 +440,6 @@ const rolesReducer = (state = initialState.roles, action) => {
       return state;
   }
 };
-const employeesReducer = (state = initialState.employees, action) => {
-  switch (action.type) {
-    case types.EMPLOYEES_FETCH:
-      return {
-        ...state,
-        loading: true,
-      };
-    case types.EMPLOYEES_DATA:
-      return {
-        ...state,
-        loading: false,
-        list: action.payload,
-      };
-    case types.EMPLOYEES_ERROR:
-      return {
-        ...state,
-        loading: false,
-      };
-    default:
-      return state;
-  }
-};
 
 const serviceCentersReducer = (state = initialState.serviceCenters, action) => {
   switch (action.type) {
@@ -264,7 +470,7 @@ const serviceCentersReducer = (state = initialState.serviceCenters, action) => {
         updateLoading: false,
         updateSuccess: true,
         list: state.list.map((item) =>
-          item.code === action.payload.code ? action.payload : item
+          item.code === action.payload.code ? action.payload : item,
         ),
       };
     case types.UPDATE_SERVICE_CENTER_ERROR:
@@ -280,7 +486,7 @@ const serviceCentersReducer = (state = initialState.serviceCenters, action) => {
 
 const userServiceCentersReducer = (
   state = initialState.userServiceCenters,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.USER_SERVICE_CENTERS_FETCH:
@@ -333,7 +539,7 @@ const vehicleModelsReducer = (state = initialState.vehicleModels, action) => {
         updateLoading: false,
         updateSuccess: true,
         list: state.list.map((item) =>
-          item.id === action.payload.id ? action.payload : item
+          item.id === action.payload.id ? action.payload : item,
         ),
       };
     case types.UPDATE_VEHICLE_MODEL_ERROR:
@@ -371,7 +577,7 @@ const slotsReducer = (state = initialState.timeSlots, action) => {
 
 const bookingStatusesReducer = (
   state = initialState.bookingStatuses,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.BOOKING_STATUSES_FETCH:
@@ -396,7 +602,7 @@ const bookingStatusesReducer = (
 };
 const availableSlotsReducer = (
   state = initialState.availableTimeSlots,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.AVAILABLE_SLOTS_FETCH:
@@ -422,7 +628,7 @@ const availableSlotsReducer = (
 
 const bookingTransactionsReducer = (
   state = initialState.bookingTransactions,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.BOOKING_TRANSACTIONS_FETCH:
@@ -548,14 +754,14 @@ const bookingTransactionsReducer = (
       if (action.payload.statusId === 6) {
         newList = state.list.filter((item) => item.id !== action.payload.id);
         newByMonthAndServiceCenter = state.byMonthAndServiceCenter.list.filter(
-          (item) => item.id !== action.payload.id
+          (item) => item.id !== action.payload.id,
         );
       } else {
         newList = state.list.map((item) =>
-          item.id === action.payload.id ? action.payload : item
+          item.id === action.payload.id ? action.payload : item,
         );
         newByMonthAndServiceCenter = state.byMonthAndServiceCenter.list.map(
-          (item) => (item.id === action.payload.id ? action.payload : item)
+          (item) => (item.id === action.payload.id ? action.payload : item),
         );
       }
       return {
@@ -582,7 +788,7 @@ const bookingTransactionsReducer = (
 
 const serviceCenterStaffReducer = (
   state = initialState.serviceCenterStaff,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.SERVICE_CENTER_STAFF_FETCH:
@@ -608,7 +814,7 @@ const serviceCenterStaffReducer = (
 
 const customersByMobileReducer = (
   state = initialState.customersByMobile,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.SEARCH_CUSTOMERS_BY_MOBILE_FETCH:
@@ -679,7 +885,7 @@ const staffHolidaysReducer = (state = initialState.staffHolidays, action) => {
           list: !isDelete
             ? [...state.byMonthAndServiceCenter.list, action.payload]
             : state.byMonthAndServiceCenter.list.filter(
-                (item) => item.id !== action.payload.id
+                (item) => item.id !== action.payload.id,
               ),
         },
       };
@@ -696,7 +902,7 @@ const staffHolidaysReducer = (state = initialState.staffHolidays, action) => {
 
 const vehicleOperationsReducer = (
   state = initialState.vehicleOperations,
-  action
+  action,
 ) => {
   switch (action.type) {
     case types.VEHICLE_OPERATIONS_FETCH:
@@ -724,6 +930,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   login: loginReducer,
   profile: profileReducer,
+  companies: companiesReducer,
   users: usersReducer,
   employees: employeesReducer,
   roles: rolesReducer,

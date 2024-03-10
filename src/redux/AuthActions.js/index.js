@@ -5,45 +5,10 @@ import {
   getToken,
   setToken,
   removeToken,
-  setAuthToken,
   removeAuthToken,
 } from "../../utils/common";
 
 import { handleError } from "../actions";
-
-export const authAction = (authToken, navigate) => async (dispatch) => {
-  try {
-    dispatch({
-      type: types.AUTH_FETCH,
-    });
-    const config = {
-      apiVersion: "baseUrl",
-    };
-    const response = await API.post(config)("/api/auth", { token: authToken });
-
-    setToken(response.data.token);
-    setAuthToken(authToken);
-    dispatch({
-      type: types.AUTH_SUCCESS,
-    });
-    const redirectUrl =
-      response.data.redirectUrl && response.data.redirectUrl !== ""
-        ? response.data.redirectUrl
-        : localStorage.getItem("redirectUrl") || null;
-    if (redirectUrl) {
-      localStorage.removeItem("redirectUrl");
-      navigate(decodeURIComponent(redirectUrl));
-    } else {
-      navigate("/");
-    }
-    message.success("Logged In.");
-  } catch (error) {
-    dispatch({
-      type: types.AUTH_ERROR,
-    });
-    handleError(error, navigate, dispatch);
-  }
-};
 
 export const loginAction = (requestData, navigate) => async (dispatch) => {
   try {
@@ -53,8 +18,8 @@ export const loginAction = (requestData, navigate) => async (dispatch) => {
     const config = {
       apiVersion: "baseUrl",
     };
-    const response = await API.post(config)("/api/auth/login", requestData);
-    setToken(response.accessToken);
+    const response = await API.post(config)("/api/login", requestData);
+    setToken(response.access_token);
     dispatch({
       type: types.USER_LOGIN_SUCCESS,
     });
@@ -73,9 +38,7 @@ export const logoutAction = (navigate) => async (dispatch) => {
 };
 export const logoutClickAction = (navigate) => async (dispatch) => {
   removeToken();
-  navigate("/unauthorized");
-  // navigate("/login");
-  // message.success("Session has expired.");
+  navigate("/login");
 };
 
 export const getProfileAction = (navigate) => async (dispatch) => {
@@ -87,7 +50,7 @@ export const getProfileAction = (navigate) => async (dispatch) => {
       apiVersion: "baseUrl",
       headers: { Authorization: "Bearer " + getToken() },
     };
-    const response = await API.get(config)("/api/user/profile");
+    const response = await API.get(config)("/api/profile");
     dispatch({
       type: types.USER_PROFILE_DATA,
       payload: response.data,
